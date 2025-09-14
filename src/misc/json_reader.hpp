@@ -39,7 +39,7 @@ class JsonReader {
      * @param filename: File to read from
      * @returns bool: True/False of success
      */
-    bool loadFromFile(const std::string& filename) {
+    bool loadFromFile(const fs::path& filename) {
       // Attempt to open file
       std::ifstream file(filename);
       if (!file.is_open()) {

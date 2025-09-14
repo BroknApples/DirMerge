@@ -8,10 +8,17 @@
 #include <stack>
 #include <cassert>
 
-#ifdef _WIN32
+#if defined(_WIN32)
   #include <windows.h>
   #include <cwchar>
-#endif // _WIN32
+#elif defined(__linux__)
+  #include <unistd.h>
+  #include <climits>
+#elif defined(__APPLE__)
+  #include <mach-o/dyld.h>
+  #include <unistd.h>
+  #include <climits>
+#endif
 
 #include "config.hpp"
 
@@ -41,6 +48,9 @@ class Filesystem {
     /** Alternate root of the filesystem */
     inline static const std::string _SYS_ROOT_ALT = "\\";
 
+    /** Appended to filenames that already exist when copying/renaming */
+    inline static const std::string _EXISTING_FILE_APPENDAGE = " - Copy";
+
     static std::stack<fs::path> _history;
     static fs::path _current_dir;
     static std::pair<ClipboardActionType, std::vector<fs::path>> _clipboard;
@@ -63,6 +73,7 @@ class Filesystem {
 
     /**
      * @brief Initialize class defaults.
+     *        NOTE: Config::init() must be called first.
      */
     static void init();
 
@@ -99,6 +110,13 @@ class Filesystem {
      * @returns fs::path: Path to the executable on the filesystem.
      */
     static fs::path getExecutableDirectoryPath();
+
+
+    /**
+     * @brief Get the path to the current directory the filesystem is set to.
+     * @returns fs::path: Path to the '_current_dir' private var
+     */
+    static const fs::path getCurrentDirectoryPath();
 
 
     /**
@@ -215,19 +233,21 @@ class Filesystem {
     /**
      * @brief Removes a file from the system. NOTE: Does NOT check if the file is a directory before proceeding.
      * @param path: Path to the file to remove.
+     * @param force_remove: Force remove the file, even if its a non-empty directory. Default = false
      * @returns bool True/False of success.
      * @throws TODO: Some error here if the file cannot be removed.
      */
-    static bool remove(fs::path path);
+    static bool remove(fs::path path, bool force_remove = false);
 
 
     /**
-     * @brief Removes a directory from the system. NOTE: Will not work if the file passed is not a directory.
+     * @brief Removes an empty OR non-empty directory from the system. NOTE: Will not work if the file passed is not a directory.
      * @param dir_path: Path to the directory to remove.
+     * @param force_remove: Force remove the directory, even if its not empty. Default = false
      * @returns bool True/False of success.
      * @throws TODO: Some error here if the file cannot be removed.
      */
-    static bool removeDirectory(fs::path dir_path);
+    static bool removeDirectory(fs::path dir_path, bool force_remove = false);
 
 
     /**
@@ -243,30 +263,33 @@ class Filesystem {
      * @brief Renames a file on the system. NOTE: Does NOT check if the file is a directory before proceeding.
      * @param path: Path to the file to rename.
      * @param new_name: New name of the file. Can be absolute or relative.
+     * @param overwrite_existing: Should the file forcefully overwrite an existing file? Default = false
      * @returns bool: True/False of success.
      * @throws TODO: Some error here if the file cannot be removed.
      */
-    static bool rename(fs::path path, const std::string& new_name);
+    static bool rename(fs::path path, const std::string& new_name, bool overwrite_existing = false);
 
 
     /**
      * @brief Renames a file on the system. NOTE: Will not work if the file passed is not a directory.
      * @param dir_path: Path to the directory to rename.
      * @param new_dirname: New name of the directory. Can be absolute or relative.
+     * @param overwrite_existing: Should the file forcefully overwrite an existing file? Default = false
      * @returns bool: True/False of success.
      * @throws TODO: Some error here if the file cannot be removed.
      */
-    static bool renameDirectory(fs::path dir_path, const std::string& new_dirname);
+    static bool renameDirectory(fs::path dir_path, const std::string& new_dirname, bool overwrite_existing = false);
 
 
     /**
      * @brief Renames a file on the system. NOTE: Will not work if the file passed is a directory.
      * @param file_path: Path to the file to rename.
      * @param new_filename: New name of the file. Can be absolute or relative.
+     * @param overwrite_existing: Should the file forcefully overwrite an existing file? Default = false
      * @returns bool: True/False of success.
      * @throws TODO: Some error here if the file cannot be removed.
      */
-    static bool renameFile(fs::path file_path, const std::string& new_filename);
+    static bool renameFile(fs::path file_path, const std::string& new_filename, bool overwrite_existing = false);
 
 
     /**

@@ -9,6 +9,9 @@
 #include "../misc/json_reader.hpp"
 
 
+namespace fs = std::filesystem;
+
+
 /**
  * @brief Configuration class
  * 
@@ -53,8 +56,11 @@ class Config {
     inline static JsonReader _config_json{};
 
       
-    /** Constants */
+    /** Path to the config file */
     inline static const std::string _CONFIG_FILE_PATH = "config/config.json";
+
+    /** Has the config system been initialized yet? */
+    inline static bool _initialized = false;
 
 
   public:
@@ -67,17 +73,24 @@ class Config {
     /**
      * @brief Initialize the config
      */
-    static void init() {
-      // Load json data
-      if (DEBUG) {
-        // NOTE: You must personally change the path to the correct file.
-        // Using CMake, my executable is simply one directory too deep, so
-        // I go back one to read the config path.
-        _config_json.loadFromFile("../" + _CONFIG_FILE_PATH);
+    static void init(const fs::path& config_file_path = fs::path{}) {
+      // Use the default if no value is passed
+      if (config_file_path == fs::path{}) {
+        _config_json.loadFromFile(config_file_path);
       }
       else {
         _config_json.loadFromFile(_CONFIG_FILE_PATH);
       }
+
+      _initialized = true;
+    }
+
+
+    /**
+     * @brief Has the Config system been initialized yet? (Has Config::init() been called?)
+     */
+    static const bool isInitialized() {
+      return _initialized;
     }
 
     
