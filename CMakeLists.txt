@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(fmerge LANGUAGES CXX)
+project("fmerge" LANGUAGES CXX)
 
 set(SOURCES
   # Main
@@ -8,12 +8,12 @@ set(SOURCES
   
   # Core
   src/core/filesystem.cpp
-  #src/core/merge_manager.cpp
+  src/core/merge_config.cpp
 )
 
 set(INCLUDES
   
 )
 
-add_executable(fmerge ${SOURCES})
-target_include_directories(fmerge PUBLIC ${INCLUDES})
+add_executable(${PROJECT_NAME} ${SOURCES})
+target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDES})

@@ -8,6 +8,9 @@
 #include <type_traits>
 
 
+// TODO: Fix this code up, its ChatGPT-generated; make it fit the project better.
+
+
 class ThreadRunner {
   public:
     // Delete constructor to make it static-only
@@ -21,7 +24,7 @@ class ThreadRunner {
       // Case 1: Function returns something
       if constexpr (!std::is_void_v<RetType>) {
         std::packaged_task<RetType()> task(
-            std::bind(std::forward<Func>(func), std::forward<Args>(args)...)
+          std::bind(std::forward<Func>(func), std::forward<Args>(args)...)
         );
         std::future<RetType> fut = task.get_future();
         std::thread(std::move(task)).detach();
@@ -30,12 +33,13 @@ class ThreadRunner {
       // Case 2: Function returns void
       else {
         std::thread(
-            std::forward<Func>(func),
-            std::forward<Args>(args)...
+          std::forward<Func>(func),
+          std::forward<Args>(args)...
         ).detach();
         return; // nothing to return
       }
     }
 };
+
 
 #endif // THREADS_HPP

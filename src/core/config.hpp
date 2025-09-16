@@ -15,12 +15,19 @@ namespace fs = std::filesystem;
 /**
  * @brief Configuration class
  * 
+ * ------------------
+ * 
  * STATIC ONLY CLASS
  */
 class Config {
   public:
     /**
-     * @brief Defines the Keys used in the config file.
+     * @brief Defines the Keys used in the config file. 
+     * 
+     * NOTE: Had to use a static-only struct instead of a
+     *       namespace since its nested within a class.
+     * 
+     * ------------------
      * 
      * STATIC ONLY STRUCT
      */
@@ -37,6 +44,7 @@ class Config {
 
       inline static const std::string SEPERATOR = ".";
 
+
       /** Section: Window Settings */
       inline static const std::string WINDOW_SETTINGS_SECTION = "Window Settings";
       inline static const std::string WINDOW_HEIGHT                 = WINDOW_SETTINGS_SECTION + SEPERATOR + "Window Height";
@@ -47,11 +55,14 @@ class Config {
       /** Section: Filesystem Settings */
       inline static const std::string FILESYSTEM_SETTINGS_SECTION = "Filesystem Settings";
       inline static const std::string DEFAULT_DIRECTORY             = FILESYSTEM_SETTINGS_SECTION + SEPERATOR + "Default Directory";
+
+
+      /** Section: Merge Settings */
+      inline static const std::string MERGE_SETTINGS_SECTION = "Merge Settings";
     };
   
 
   private:
-
     /** Object containing the json data */
     inline static JsonReader _config_json{};
 

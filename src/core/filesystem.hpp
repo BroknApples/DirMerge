@@ -29,6 +29,8 @@ namespace fs = std::filesystem;
 /**
  * @brief Basic implementation of a filesystem.
  * 
+ * ------------------
+ * 
  * STATIC ONLY CLASS
  */
 class Filesystem {

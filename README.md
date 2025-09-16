@@ -59,4 +59,4 @@ fmerge.exe
 3. Follow instructions written in program.
 
 ## License
-[MIT License](https://github.com/BroknApples/Multi-Program-Runner-Script/blob/main/LICENSE.md)
+[MIT License](https://github.com/BroknApples/VSFM/blob/main/LICENSE.md)
