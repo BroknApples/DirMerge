@@ -11,10 +11,21 @@
 // TODO: Fix this code up, its ChatGPT-generated; make it fit the project better.
 
 
-class ThreadRunner {
+/**
+ * @brief Class which is used to run functions on different threads
+ * 
+ * STATIC ONLY CLASS
+ */
+class Threads {
+  private:
+    /** How many threads are usable */
+    static int _usable_thread_count;
+
   public:
-    // Delete constructor to make it static-only
-    ThreadRunner() = delete;
+    /**
+     * @brief Enforce Static Class
+     */
+    Threads() = delete;
 
     // Generic run function
     template <typename Func, typename... Args>

@@ -16,8 +16,14 @@
  */
 class MergeManager {
   private:
-    /** Active merge processes running on some number of threads. */
-    static std::vector<std::pair<float, MergeConfig>> _active_merges;
+    /** 
+     * Active merge processes running on some number of threads.
+     * 
+     * NOTE:
+     *      float = percentage of merge completion
+     *      MergeConfig = merge process
+     */
+    static std::vector<std::pair<float, MergeConfig&>> _active_merges;
 
 
   public:
