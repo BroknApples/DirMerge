@@ -7,14 +7,25 @@
 #include <thread>
 
 
+/**
+ * @brief Class used to track the time of the program/computer.
+ * 
+ * ------------
+ * 
+ * STATIC ONLY CLASS
+ */
 class Clock {
   private:
-    /** The time in which the program starts. */
-    // TODO: Make this hold only the actual time like 3:10PM 6/7/2025
+    // TODO: Add runtime and local_time;
+    //
+    // runtime = time the program has been active
+    // local_time = current time in your time zone
 
 
   public:
-    /** NOTE: Static Class */
+    /**
+     * @brief Enforce Static Class
+     */
     Clock() = delete;
 
 
@@ -25,12 +36,12 @@ class Clock {
 
 
     /**
-     * @brief Equivalent to a sleep() function
+     * @brief Equivalent to a sleep() function. | Applies on the current thread.
      * 
      * Usage  ->   Clock::wait(100, std::chrono::milliseconds{});
      * 
-     * @tparam Duration: A 'std::chrono::' duration value such as 'milliseconds' or 'microseconds'
      * @param seconds: Time to sleep the current thread for in seconds
+     * @tparam Duration: A 'std::chrono::' duration value such as 'milliseconds' or 'microseconds'
      */
     template <typename Duration>
     static void wait(double time, Duration) {

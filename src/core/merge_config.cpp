@@ -14,7 +14,13 @@ namespace fs = std::filesystem;
 *************************************************************/
 
 
-MergeConfig::MergeConfig() {}
+MergeConfig::MergeConfig()
+  : _merge_list()
+  , _freed_indexes()
+  , _naming_sequence(nullptr)
+  , _recursive_merge(false) {}
+
+
 MergeConfig::~MergeConfig() {}
 
 
@@ -124,6 +130,6 @@ bool MergeConfig::existsInMergeList(const std::vector<fs::path>& files) {
 }
 
 
-const std::vector<fs::path> MergeConfig::getMergeList() const {
+const std::vector<fs::path>& MergeConfig::getMergeList() const {
   return _merge_list;
 }

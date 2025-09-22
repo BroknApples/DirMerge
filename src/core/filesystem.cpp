@@ -48,6 +48,7 @@ void Filesystem::init() {
 
   // Setup clipboard and history
   _history = std::stack<fs::path>{}; // TODO: Setup history system.
+  _clipboard = std::make_pair(ClipboardActionType::NONE, std::vector<fs::path>{});
 
   // Set the starting directory to the saved default.
   setCurrentDirectory(Config::getString(Config::Keys::DEFAULT_DIRECTORY));
@@ -64,23 +65,44 @@ void Filesystem::addToClipboard(ClipboardActionType type, const std::vector<fs::
 }
 
 
-void Filesystem::applyClipboardAction(fs::path dest_path) {
+void Filesystem::applyClipboardAction(fs::path dest_dirpath, bool overwrite_existing) {
   // Get path from relative/absolute
-  dest_path = _getRelativeOrAbsolutePath(dest_path);
+  dest_dirpath = _getRelativeOrAbsolutePath(dest_dirpath);
 
+  // Destination path MUST be a directory
+  if (!isDirectory(dest_dirpath)) {
+    eprintln("Error: Cannot apply the clipboard onto a non-directory file.");
+    return;
+  }
+
+  // Get clipboard data
   ClipboardActionType& type = _clipboard.first;
-  std::vector<fs::path>& paths = _clipboard.second;
+  std::vector<fs::path>& files = _clipboard.second;
 
   switch (type) {
+    case ClipboardActionType::NONE: {
+      // Do nothing.
+      return;
+    }
     // Duplicate files into another location
     case ClipboardActionType::COPY: {
-      // TODO: Implement
+      // For each file in the list, call copy() with:
+      //  file = the original path
+      //  (dest_path/file.filename()) = the original filename appended to the destination directory's path
+      for (fs::path& file : files) {
+        copy(file, (dest_dirpath/file.filename()), "", overwrite_existing);
+      }
 
       break;
     }
     // Rename files into another location
     case ClipboardActionType::CUT: {
-      // TODO: Implement
+      // For each file in the list, call copy() with:
+      //  file = the original path
+      //  (dest_dirpath/file.filename()).string() = the original filename appended to the destination directory's path
+      for (fs::path& file : files) {
+        rename(file, (dest_dirpath/file.filename()).string(), overwrite_existing);
+      }
 
       break;
     }
@@ -89,13 +111,71 @@ void Filesystem::applyClipboardAction(fs::path dest_path) {
       assert(false && "Unreachable code!");
     }
   }
+
+  // Clear the clipboard
+  clearClipboard();
+}
+
+
+void Filesystem::clearClipboard() {
+  _clipboard.first = ClipboardActionType::NONE;
+  _clipboard.second.clear();
+}
+
+
+fs::path Filesystem::getExecutablePath() {
+  /**
+   * NOTE: Hasn't been tested on other operating systems as of yet.
+   * Just theoretically works, chatgpt'd the other OS's so idk for
+   * sure.
+   */
+
+  // WINDOWS
+  #if defined(_WIN32)
+    char buffer[MAX_PATH];
+    GetModuleFileNameA(NULL, buffer, MAX_PATH);
+    return std::filesystem::path(buffer);
+
+  // LINUX
+  #elif defined(__linux__)
+    char buffer[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+    if (len != -1) {
+      buffer[len] = '\0';
+      return std::filesystem::path(buffer);
+    }
+
+    // Error
+    return fs::path{};
+
+  // APPLE
+  #elif defined(__APPLE__)
+    char buffer[PATH_MAX];
+    uint32_t size = sizeof(buffer);
+    if (_NSGetExecutablePath(buffer, &size) == 0) {
+      char resolved[PATH_MAX];
+      realpath(buffer, resolved);
+      return std::filesystem::path(resolved);
+    }
+
+    // Error
+    return fs::path{};
+
+  // Fallback
+  #else
+    // This shouldn't be possible on 99.99% of machines, but you never know.
+    eprintln("Error: Unsupported Operating System.");
+    return fs::path{};
+  #endif
 }
 
 
 fs::path Filesystem::getExecutableDirectoryPath() {
-  // NOTE: Hasn't been tested on other operating systems as of yet.
-  // Just theoretically works, chatgpt'd the other OS's so idk for
-  // sure.
+  /**
+   * NOTE: Hasn't been tested on other operating systems as of yet.
+   * Just theoretically works, chatgpt'd the other OS's so idk for
+   * sure.
+   */
 
   // WINDOWS
   #if defined(_WIN32)
@@ -113,7 +193,7 @@ fs::path Filesystem::getExecutableDirectoryPath() {
     }
 
     // Error
-    return {};
+    return fs::path{};
 
   // APPLE
   #elif defined(__APPLE__)
@@ -126,12 +206,13 @@ fs::path Filesystem::getExecutableDirectoryPath() {
     }
 
     // Error
-    return {};
+    return fs::path{};
 
   // Fallback
   #else
-    // This shouldn't be possible typically, but you never know
-    return {};
+    // This shouldn't be possible on 99.99% of machines, but you never know.
+    eprintln("Error: Unsupported Operating System.");
+    return fs::path{};
   #endif
 }
 
@@ -153,12 +234,21 @@ bool Filesystem::setCurrentDirectory(fs::path dir_path) {
 }
 
 
-std::vector<fs::path> Filesystem::getFilesInCurrentDirectory() {
+// TODO: Ignore all files that are operating system-managed for the following few functions.
+//
+// Probaly wanna add a parameter to each function called like
+// "ignore_os_files" and "ignore_hidden_files" with default values set to TRUE
+// Use these to call two functions:
+//  bool isHiddenFile();
+//  bool isOperatingSystemFile();
+
+
+const std::vector<fs::path>& Filesystem::getFilesInCurrentDirectory() {
   return getFilesInDirectory(_current_dir.string());
 }
 
 
-std::vector<fs::path> Filesystem::getFilesInDirectory(const std::string& dir_path) {
+const std::vector<fs::path>& Filesystem::getFilesInDirectory(const std::string& dir_path) {
   // Special Case: OS is Windows and attempting to get the root's files
   #ifdef _WIN32
     // When on Windows, if the root is attempting to be accessed, instead return each drive's path
@@ -198,12 +288,12 @@ std::vector<fs::path> Filesystem::getFilesInDirectory(const std::string& dir_pat
 }
 
 
-std::vector<fs::path> Filesystem::getFilesInCurrentDirectoryRecursive() {
+const std::vector<fs::path>& Filesystem::getFilesInCurrentDirectoryRecursive() {
   return getFilesInDirectoryRecursive(_current_dir.string());
 }
 
 
-std::vector<fs::path> Filesystem::getFilesInDirectoryRecursive(const std::string& dir_path) {
+const std::vector<fs::path>& Filesystem::getFilesInDirectoryRecursive(const std::string& dir_path) {
   // NEVER run the recursive version when on the system root OR when the current
   // directory's size is over "<SOME_SIZE>"
   if (dir_path == _SYS_ROOT || dir_path == _SYS_ROOT_ALT) {
@@ -221,22 +311,51 @@ std::vector<fs::path> Filesystem::getFilesInDirectoryRecursive(const std::string
   // Return empty vector if the path is NOT a directory
   if (!isDirectory(DIR_PATH)) return {};
 
-  std::vector<fs::path> files;
-  for (const auto& file : fs::directory_iterator(DIR_PATH)) {
-    // If the file is a directory, then gather all files in that directory and add them to the list.
-    if (isDirectory(file)) {
-      std::vector<fs::path> children = getFilesInDirectoryRecursive(file.path().string());
-      for (const fs::path& child : children) {
-        files.push_back(child);
-      }
-    }
-    // Since the file is not a directory, just simply add the file.
-    else {
-      files.push_back(file);
-    }
+  // Return all paths in the directory
+  return std::vector<fs::path>(fs::recursive_directory_iterator(DIR_PATH), {});
+}
+
+
+const int Filesystem::getTotalNumberOfFilesInDirectory(const std::string& dir_path) {
+  // Get path from relative/absolute
+  const fs::path DIR_PATH = _getRelativeOrAbsolutePath(dir_path);
+
+  // Return 0 if the path is NOT a directory
+  if (!isDirectory(DIR_PATH)) return 0;
+
+  int count = 0;
+  for (const auto& entry : fs::directory_iterator(DIR_PATH)) {
+    if (isRegularFile(entry.status())) count++;
   }
-  
-  return files;
+
+  return count;
+}
+
+
+const int Filesystem::getTotalNumberOfFilesInDirectoryRecursive(const std::string& dir_path) {
+  // NEVER run the recursive version when on the system root OR when the current
+  // directory's size is over "<SOME_SIZE>"
+  if (dir_path == _SYS_ROOT || dir_path == _SYS_ROOT_ALT) {
+    // DEBUG Print
+    if (DEBUG) println("'dir_path' is ROOT!");
+
+    // TODO: Add some checker for file size. If the directory is over like 1GB
+    // or something in size it would take forever to check.
+    return getTotalNumberOfFilesInDirectory(dir_path);
+  }  
+
+  // Get path from relative/absolute
+  const fs::path DIR_PATH = _getRelativeOrAbsolutePath(dir_path);
+
+  // Return empty vector if the path is NOT a directory
+  if (!isDirectory(DIR_PATH)) return 0;
+
+  int count = 0;
+  for (const auto& entry : fs::recursive_directory_iterator(DIR_PATH)) {
+    if (isRegularFile(entry.status())) count++;
+  }
+
+  return count;
 }
 
 
@@ -307,7 +426,30 @@ bool Filesystem::isDirectory(fs::path path) {
 }
 
 
+bool Filesystem::isDirectory(fs::file_status status) {
+  return fs::is_directory(status);
+}
+
+
+bool Filesystem::isRegularFile(fs::path path) {
+  // Get path from relative/absolute
+  path = _getRelativeOrAbsolutePath(path);
+
+  // Path must exist to be a directory.
+  if (!exists(path)) return false;
+
+  return fs::is_regular_file(path);
+}
+
+
+bool Filesystem::isRegularFile(fs::file_status status) {
+  return fs::is_regular_file(status);
+}
+
+
 bool Filesystem::createDirectory(fs::path parent_dir_path, const std::string& new_dirname) {
+  // TODO: Create an overload for passing the full filepath to the function, not in two seperate parts.
+  
   // Get path from relative/absolute
   parent_dir_path = _getRelativeOrAbsolutePath(parent_dir_path);
 
@@ -317,6 +459,9 @@ bool Filesystem::createDirectory(fs::path parent_dir_path, const std::string& ne
   fs::create_directory(parent_dir_path/new_dirname);
   return true;
 }
+
+
+// TODO: Add overloads for all the functions below that take strings for names and paths
 
 
 bool Filesystem::remove(fs::path path, bool force_remove) {
@@ -372,7 +517,7 @@ bool Filesystem::removeFile(fs::path file_path) {
   file_path = _getRelativeOrAbsolutePath(file_path);
 
   // Can't remove what's not there :) | Also cannot be a directory
-  if (!exists(file_path) || isDirectory(file_path)) return false;
+  if (!exists(file_path) || !isRegularFile(file_path)) return false;
 
   try {
     return fs::remove(file_path);
@@ -456,8 +601,8 @@ bool Filesystem::renameFile(fs::path file_path, const std::string& new_filename,
   file_path = _getRelativeOrAbsolutePath(file_path);
 
   try {
-    // Cannot be a directory
-    if (isDirectory(file_path)) return false;
+    // Src path is not a regular file.
+  if (!isRegularFile(file_path)) return false;
 
     fs::path modified_file_path = file_path;
 
@@ -486,7 +631,7 @@ bool Filesystem::renameFile(fs::path file_path, const std::string& new_filename,
 }
 
 
-bool Filesystem::copy(fs::path src_path, fs::path dest_path, const std::string& new_name) {
+bool Filesystem::copy(fs::path src_path, fs::path dest_path, const std::string& new_name, bool overwrite_existing) {
   // Get path from relative/absolute
   src_path = _getRelativeOrAbsolutePath(src_path);
   dest_path = _getRelativeOrAbsolutePath(dest_path);
@@ -497,16 +642,24 @@ bool Filesystem::copy(fs::path src_path, fs::path dest_path, const std::string& 
   if (new_name != "") {
     dest_path.replace_filename(new_name);
   }
+
   // If the file exists, append something to the basename.
-  else if (exists(new_name)) {
+  if (exists(dest_path) && !overwrite_existing) {
     std::string replacement_name = dest_path.stem().string() + _EXISTING_FILE_APPENDAGE;
     if (!isDirectory(dest_path)) replacement_name += dest_path.extension().string(); // Files that aren't directories also need to append the extension (which hopefully exists)
     dest_path.replace_filename(replacement_name);
   }
   
   try {
-    // Plain copy; no check for file type or anything.
-    fs::copy(src_path, dest_path, fs::copy_options::recursive);
+    // Get the copy options
+    fs::copy_options copy_options = fs::copy_options::recursive | (overwrite_existing ? fs::copy_options::overwrite_existing : fs::copy_options::recursive);
+
+    // TODO: Create renaming system for the removed file so it can be recovered if copying fails.
+    if (overwrite_existing) {
+      remove(dest_path);
+    }
+
+    fs::copy(src_path, dest_path, copy_options);
     return true;
   }
   catch (const fs::filesystem_error& e) {
@@ -516,10 +669,13 @@ bool Filesystem::copy(fs::path src_path, fs::path dest_path, const std::string& 
 }
 
 
-bool Filesystem::copyDirectory(fs::path src_dir_path, fs::path dest_dir_path, const std::string& new_dirname) {
+bool Filesystem::copyDirectory(fs::path src_dir_path, fs::path dest_dir_path, const std::string& new_dirname, bool overwrite_existing) {
   // Get path from relative/absolute
   src_dir_path = _getRelativeOrAbsolutePath(src_dir_path);
   dest_dir_path = _getRelativeOrAbsolutePath(dest_dir_path);
+
+  // Src path is not a directory.
+  if (!isDirectory(src_dir_path)) return false;
 
   // TODO: Limit Src_dir_path to some size like 500mb or something. (maybe make a setting in the json)
 
@@ -527,17 +683,23 @@ bool Filesystem::copyDirectory(fs::path src_dir_path, fs::path dest_dir_path, co
   if (new_dirname != "") {
     dest_dir_path.replace_filename(new_dirname);
   }
+
   // If the file exists, append something to the basename.
-  else if (exists(new_dirname)) {
+  if (exists(dest_dir_path) && !overwrite_existing) {
     std::string replacement_name = dest_dir_path.stem().string() + _EXISTING_FILE_APPENDAGE;
     dest_dir_path.replace_filename(replacement_name);
   }
   
   try {
-    // Src path is not a directory.
-    if (!isDirectory(src_dir_path)) return false;
+    // Get the copy options
+    fs::copy_options copy_options = fs::copy_options::recursive | (overwrite_existing ? fs::copy_options::overwrite_existing : fs::copy_options::recursive);
 
-    fs::copy(src_dir_path, dest_dir_path, fs::copy_options::recursive);
+    // TODO: Create renaming system for the removed file so it can be recovered if copying fails.
+    if (overwrite_existing) {
+      removeDirectory(dest_dir_path);
+    }
+
+    fs::copy(src_dir_path, dest_dir_path, copy_options);
     return true;
   }
   catch (const fs::filesystem_error& e) {
@@ -547,27 +709,35 @@ bool Filesystem::copyDirectory(fs::path src_dir_path, fs::path dest_dir_path, co
 }
 
 
-bool Filesystem::copyFile(fs::path src_file_path, fs::path dest_file_path, const std::string& new_filename) {
+bool Filesystem::copyFile(fs::path src_file_path, fs::path dest_file_path, const std::string& new_filename, bool overwrite_existing) {
   // Get path from relative/absolute
   src_file_path = _getRelativeOrAbsolutePath(src_file_path);
   dest_file_path = _getRelativeOrAbsolutePath(dest_file_path);
+
+  // Src path is not a regular file.
+  if (!isRegularFile(src_file_path)) return false;
 
   // Replace the destination dir_path with new_filename
   if (new_filename != "") {
     dest_file_path.replace_filename(new_filename);
   }
+
   // If the file exists, append something to the basename.
-  else if (exists(new_filename)) {
+  if (exists(dest_file_path) && !overwrite_existing) {
     std::string replacement_name = dest_file_path.stem().string() + _EXISTING_FILE_APPENDAGE + dest_file_path.extension().string();
     dest_file_path.replace_filename(replacement_name);
   }
   
   try {
-    // Src path is a directory.
-    if (isDirectory(src_file_path)) return false;
+    // Get the copy options
+    fs::copy_options copy_options = overwrite_existing ? fs::copy_options::overwrite_existing : fs::copy_options::none;
 
-    // Plain copy; no check for file type or anything.
-    fs::copy_file(src_file_path, dest_file_path);
+    // TODO: Create renaming system for the removed file so it can be recovered if copying fails.
+    if (overwrite_existing) {
+      removeFile(dest_file_path);
+    }
+
+    fs::copy_file(src_file_path, dest_file_path, copy_options);
     return true;
   }
   catch (const fs::filesystem_error& e) {

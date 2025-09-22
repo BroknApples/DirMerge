@@ -18,7 +18,7 @@
 
 
 class PluginInterface {
-
+  // TODO: Implement after setting up the base program
 };
 
 
