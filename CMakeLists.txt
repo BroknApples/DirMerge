@@ -9,6 +9,7 @@ set(SOURCES
   # Core
   src/core/filesystem.cpp
   src/core/merge_config.cpp
+  src/core/merge_manager.cpp
 )
 
 set(INCLUDES

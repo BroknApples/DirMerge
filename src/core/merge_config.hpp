@@ -25,13 +25,18 @@ class MergeConfig {
 
     // Merging Options
     std::unique_ptr<NamingSequence> _naming_sequence; /** Naming sequence to use in the renaming step. */
-    bool _recursive_merge; /** Should folder be expanded more than one time? */
+    fs::path _dest_dir; /** Destination directory of the merge. */
+    
+    // TODO: Look into making a bitmask type flag. Do after adding all options ofc tho.
+    bool _recursive_merge;                  /** Should folder be expanded more than one time? */
+    bool _remove_source_post_copy;          /** Should the original files be removed after copying them to the location? */
+    bool _overwrite_existing;               /** Should the files overwrite existing files? */
     // TODO: List more options here.
 
   public:
     /**
      * @brief Default Constructor. Set all values to default saved in config.json
-     * TODO: Implement defaults in config.ini
+     * TODO: Implement defaults in 'config.json'
      */
     MergeConfig();
 
@@ -122,8 +127,26 @@ class MergeConfig {
      * @brief Gets the naming sequence for usage.
      * @returns NamingSequence&: Reference to the naming sequence.
      */
-    const NamingSequence& getNamingSequence() const {
+    NamingSequence& getNamingSequence() const {
       return *_naming_sequence;
+    }
+
+
+    /**
+     * @brief Set a new destination directory.
+     * @param dest_dir: Path to the new destination directory.
+     */
+    void setDestinationDirectory(const fs::path& dest_dir) {
+      _dest_dir = dest_dir;
+    }
+
+
+    /**
+     * @brief Gets the destination directory for usage.
+     * @returns fs::path&: Path of the destination directory.
+     */
+    const fs::path& getDestinationDirectory() const {
+      return _dest_dir;
     }
 
 
@@ -142,6 +165,42 @@ class MergeConfig {
      */
     const bool getRecursiveMergeFlag() const {
       return _recursive_merge;
+    }
+
+
+    /**
+     * @brief Sets the remove source post copy flag.
+     * @param value: True/False value
+     */
+    void setRemoveSourcePostCopyFlag(bool value) {
+      _remove_source_post_copy = value;
+    }
+
+
+    /**
+     * @brief Gets the remove source post copy flag for usage
+     * @returns bool: True/False flag value
+     */
+    const bool getRemoveSourcePostCopyFlag() const {
+      return _remove_source_post_copy;
+    }
+
+
+    /**
+     * @brief Sets the overwrite existing flag.
+     * @param value: True/False value.
+     */
+    void setOverwriteExistingFlag(bool value) {
+      _overwrite_existing = value;
+    }
+
+
+    /**
+     * @brief Gets the overwrite existing flag for usage.
+     * @returns bool: True/False falg value
+     */
+    const bool getOverwriteExistingFlag() const {
+      return _overwrite_existing;
     }
 };
 

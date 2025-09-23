@@ -7,7 +7,8 @@
 
 #include "filesystem.hpp"
 #include "merge_config.hpp"
-#include ".../misc/utils.hpp"
+#include "../misc/utils.hpp"
+#include "../misc/interval_timer.hpp"
 
 
 /**
@@ -40,6 +41,32 @@ class MergeManager {
     static std::vector<std::unique_ptr<MergeConfig>> _completed_merges;
 
 
+    /***************************************************************/
+    /********************** Private Functions **********************/
+    /***************************************************************/
+
+
+    /**
+     * @brief Restore all files included in the merge since there was some issue.
+     *        Deletes the copied files and restores anything done to the original files.
+     * @param original_paths: Paths of the files to restore.
+     * @param dest_dir: Directory the files were copied to.
+     */
+    static void _restoreFiles(const std::vector<fs::path>& original_paths, const fs::path& dest_dir);
+    
+
+    /**
+     * @brief Attempt to copy the files to the new location in the merge processe.
+     * @param original_paths: Vector contatining the original paths of all the merged files
+     * @param filename: File to attempt copying of.
+     * @param dest_dir: Destination folder of the new filename.
+     * @param naming_sequence: NamingSequence& class used for renaming.
+     * @param overwrite_existing: Should the file overwrite an existing file.
+     * @returns bool: True/False of success.
+     */
+    static bool _attemptFileCopying(std::vector<fs::path>& original_paths, const fs::path& filename, const fs::path& dest_dir, NamingSequence& naming_sequence, bool overwrite_existing);
+
+
   public:
     /**
      * @brief Enforce Static Class
@@ -69,53 +96,7 @@ class MergeManager {
      * @brief Start a new merge process.
      * @param merge_config: Config data for the merge.
      */
-    static void startMerge(std::unique_ptr<MergeConfig> merge_config) {
-      /******************** Get merge config data ********************/
-
-      const std::vector<fs::path> MERGE_LIST    = merge_config->getMergeList();
-      NamingSequence naming_sequence      = merge_config->getNamingSequence();
-      const bool RECURSIVE_MERGE                = merge_config->getRecursiveMergeFlag();
-      
-      /******************************************************/
-
-      // Append the new merge config to the 'active merges' list with a progress value of 0.0f
-      _active_merges.emplace_back(0.0f, std::move(merge_config));
-      
-      // Get the iterator to the merge config in the list. Used later when cleaning up.
-      auto config_iterator = std::prev(_active_merges.end());
-
-      // TODO: Start the actual merge loop here and update the data within '_active_merges' as it goes on.
-      
-      // Get and set the total number of files included in the merge.
-      for (const fs::path& file : MERGE_LIST) {
-        // If file is a directory, don't add itself, but rather add its contents and its subdirectories' contents
-        if (Filesystem::isDirectory(file)) {
-          std::vector<fs::path> files;
-
-          /** NOTE: Recursive merge flag setting */ 
-          if (RECURSIVE_MERGE) {
-            files = Filesystem::getFilesInDirectoryRecursive(file.string());
-          }
-          else {
-            files = Filesystem::getFilesInDirectory(file.string());
-          }
-
-          // Rename each file in the list.
-          for (const fs::path& f : files) {
-            Filesystem::rename(f, naming_sequence.getNextName(f), true);
-          }
-        }
-        else if (Filesystem::isRegularFile(file)) {
-          // Rename file.
-          Filesystem::renameFile(file, naming_sequence.getNextName(file), true);
-        }
-      }
-
-
-      // Completed merge. Move from active->completed list
-      _completed_merges.push_back(std::move(config_iterator->second));
-      _active_merges.erase(config_iterator);
-    }
+    static void startMerge(std::unique_ptr<MergeConfig> merge_config);
 };
 
 
