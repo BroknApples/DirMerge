@@ -86,8 +86,8 @@ class Config {
      */
     static void init(const fs::path& config_file_path = fs::path{}) {
       // Use the default if no value is passed
-      if (config_file_path == fs::path{}) {
-        _config_json.loadFromFile(config_file_path);
+      if (config_file_path != fs::path{}) {
+        _config_json.loadFromFile(config_file_path.lexically_normal());
       }
       else {
         _config_json.loadFromFile(_CONFIG_FILE_PATH);

@@ -7,12 +7,23 @@
  * 
  */
 
-#include <windows.h>
-#include <stdio.h>
+
+// Platform specific includes
+#if defined(_WIN32)
+  #define NOMINMAX
+  #include <windows.h>
+#endif // Platform specific includes
+
+#include <cstdlib>
 #include <iostream>
+#include <string>
+#include <limits>
 
 #include "core/config.hpp"
 #include "core/filesystem.hpp"
+#include "core/merge_config.hpp"
+#include "core/merge_manager.hpp"
+#include "core/merge_helpers.hpp"
 #include "misc/clock.hpp"
 #include "misc/interval_timer.hpp"
 #include "misc/utils.hpp"
@@ -28,53 +39,87 @@ namespace fs = std::filesystem;
  */
 int main(int argc, char* argv[]) {
   // Initialize 'globals'
-  Config::init(fs::path("..")/Filesystem::getExecutableDirectoryPath()); // TESTING - Need to set custom path during testing. Modify if necessary.
+  const fs::path exe_dir = Filesystem::getExecutableDirectoryPath();
+  Config::init(exe_dir/fs::path("..")/fs::path("config/config.json")); // TESTING - Need to set custom path during testing. Modify if necessary.
   Filesystem::init();
 
 
   Filesystem::setCurrentDirectory(Filesystem::getExecutableDirectoryPath());
 
+  // Setup config
+  auto merge_config = std::make_unique<MergeConfig>();
   while (true) {
+    print("Add more? (1 for yes, 0 for no): ");
+    int _continue;
+    std::cin >> _continue;
+    if (_continue == 0) break;
+
+    println("");
     std::vector<fs::path> files = Filesystem::getFilesInCurrentDirectory();
     for (const auto& path : files) {
       println("Path: ", path);
     }
 
-    println("\nEnter a filename: ");
+    print("Add a filename to the merge: ");
     std::string filename;
-    std::cin >> filename;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::getline(std::cin, filename);
 
-    println("Enter an option:\n 0 - Rename\n 1 - Copy\n 2 - Remove\n");
-    int option;
-    std::cin >> option;
-
-    switch (option) {
-      case 0: {
-        println("Enter a new filename: ");
-        std::string new_filename;
-        std::cin >> new_filename;
-        Filesystem::rename(filename, new_filename);
-        break;
-      }
-      case 1: {
-        println("Enter a destination path: ");
-        std::string dest_path;
-        std::cin >> dest_path;
-
-        println("Enter a new filename: ");
-        std::string new_filename;
-        std::cin >> new_filename;
-        Filesystem::copy(filename, dest_path, new_filename);
-        break;
-      }
-      case 2: {
-        Filesystem::remove(filename, true);
-        break;
-      }
-      default:
-        return 0;
-    }
+    merge_config->addFileToMergeList(filename);
   }
+  // TESTING
+  // Set merge config data
+  merge_config->setNamingSequence(std::make_unique<NumericalNamingSequence>());
+  
+  const fs::path dest_path = exe_dir/fs::path("test_dir");
+  println("Setting destination path to: '", dest_path, "'");
+  merge_config->setDestinationDirectory(dest_path);
+
+
+  // Do merge
+  MergeManager::startMerge(std::move(merge_config));
+
+  // while (true) {
+  //   std::vector<fs::path> files = Filesystem::getFilesInCurrentDirectory();
+  //   for (const auto& path : files) {
+  //     println("Path: ", path);
+  //   }
+
+  //   println("\nEnter a filename: ");
+  //   std::string filename;
+  //   std::cin >> filename;
+
+  //   println("Enter an option:\n 0 - Rename\n 1 - Copy\n 2 - Remove\n");
+  //   int option;
+  //   std::cin >> option;
+
+  //   switch (option) {
+  //     case 0: {
+  //       println("Enter a new filename: ");
+  //       std::string new_filename;
+  //       std::cin >> new_filename;
+  //       Filesystem::rename(filename, new_filename);
+  //       break;
+  //     }
+  //     case 1: {
+  //       println("Enter a destination path: ");
+  //       std::string dest_path;
+  //       std::cin >> dest_path;
+
+  //       println("Enter a new filename: ");
+  //       std::string new_filename;
+  //       std::cin >> new_filename;
+  //       Filesystem::copy(filename, dest_path, new_filename);
+  //       break;
+  //     }
+  //     case 2: {
+  //       Filesystem::remove(filename, true);
+  //       break;
+  //     }
+  //     default:
+  //       return 0;
+  //   }
+  // }
   
 
   // // TESTING

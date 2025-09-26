@@ -28,7 +28,7 @@ class MergeConfig {
     fs::path _dest_dir; /** Destination directory of the merge. */
     
     // TODO: Look into making a bitmask type flag. Do after adding all options ofc tho.
-    bool _recursive_merge;                  /** Should folder be expanded more than one time? */
+    bool _unpack_subdirectories;            /** Should folders be expanded more than one time? */
     bool _remove_source_post_copy;          /** Should the original files be removed after copying them to the location? */
     bool _overwrite_existing;               /** Should the files overwrite existing files? */
     // TODO: List more options here.
@@ -151,20 +151,20 @@ class MergeConfig {
 
 
     /**
-     * @brief Set a new recursive merge settings
+     * @brief Set a new unpack subdirectories setting
      * @param value: True/False value
      */
-    void setRecursiveMergeFlag(bool value) {
-      _recursive_merge = value;
+    void setUnpackSubdirectoriesFlag(bool value) {
+      _unpack_subdirectories = value;
     }
 
 
     /**
-     * @brief Gets the recursive merge value for usage
+     * @brief Gets the unpack subdirectories value for usage
      * @returns bool: True/False flag value
      */
-    const bool getRecursiveMergeFlag() const {
-      return _recursive_merge;
+    const bool getUnpackSubdirectoriesFlag() const {
+      return _unpack_subdirectories;
     }
 
 

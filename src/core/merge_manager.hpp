@@ -78,7 +78,7 @@ class MergeManager {
      * @brief Gets a list of the active merges and their completion progress.
      * @returns std::vector<std::pair<float, std::unique_ptr<MergeConfig>>>&: List of pairs formatted as such: { PercentComplete : MergeConfig }
      */
-    const std::vector<std::pair<float, std::unique_ptr<MergeConfig>>>& getActiveMerges() const {
+    static const std::vector<std::pair<float, std::unique_ptr<MergeConfig>>>& getActiveMerges() {
       return _active_merges;
     }
 
@@ -87,7 +87,7 @@ class MergeManager {
      * @brief Gets a list of the already completed merges
      * @returns std::vector<std::unique_ptr<MergeConfig>>&: List of past completed merges.
      */
-    const std::vector<std::unique_ptr<MergeConfig>>& getCompletedMerges() const {
+    static const std::vector<std::unique_ptr<MergeConfig>>& getCompletedMerges() {
       return _completed_merges;
     }
 

@@ -148,7 +148,7 @@ class Filesystem {
      * @brief Get all the files in the current directory. Does not get the contents of subdirectories.
      * @returns std:vector<fs::path>: List of files.
      */
-    static const std::vector<fs::path>& getFilesInCurrentDirectory();
+    static const std::vector<fs::path> getFilesInCurrentDirectory();
 
 
     /**
@@ -156,7 +156,7 @@ class Filesystem {
      * @param dir_path: Path to the directory to get the files from. Can be relative or absolute
      * @returns std:vector<fs::path>: List of files.
      */
-    static const std::vector<fs::path>& getFilesInDirectory(const std::string& dir_path);
+    static const std::vector<fs::path> getFilesInDirectory(const std::string& dir_path);
 
     
     /**
@@ -165,7 +165,7 @@ class Filesystem {
      *        of those directories added into the vector.
      * @returns std:vector<fs::path>: List of files.
      */
-    static const std::vector<fs::path>& getFilesInCurrentDirectoryRecursive();
+    static const std::vector<fs::path> getFilesInCurrentDirectoryRecursive();
 
 
     /**
@@ -175,7 +175,7 @@ class Filesystem {
      * @param dir_path: Path to the directory to get the files from. Can be relative or absolute
      * @returns std:vector<fs::path>: List of files.
      */
-    static const std::vector<fs::path>& getFilesInDirectoryRecursive(const std::string& dir_path);
+    static const std::vector<fs::path> getFilesInDirectoryRecursive(const std::string& dir_path);
 
 
     /**

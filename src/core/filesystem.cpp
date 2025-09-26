@@ -243,12 +243,12 @@ bool Filesystem::setCurrentDirectory(fs::path dir_path) {
 //  bool isOperatingSystemFile();
 
 
-const std::vector<fs::path>& Filesystem::getFilesInCurrentDirectory() {
+const std::vector<fs::path> Filesystem::getFilesInCurrentDirectory() {
   return getFilesInDirectory(_current_dir.string());
 }
 
 
-const std::vector<fs::path>& Filesystem::getFilesInDirectory(const std::string& dir_path) {
+const std::vector<fs::path> Filesystem::getFilesInDirectory(const std::string& dir_path) {
   // Special Case: OS is Windows and attempting to get the root's files
   #ifdef _WIN32
     // When on Windows, if the root is attempting to be accessed, instead return each drive's path
@@ -288,12 +288,12 @@ const std::vector<fs::path>& Filesystem::getFilesInDirectory(const std::string& 
 }
 
 
-const std::vector<fs::path>& Filesystem::getFilesInCurrentDirectoryRecursive() {
+const std::vector<fs::path> Filesystem::getFilesInCurrentDirectoryRecursive() {
   return getFilesInDirectoryRecursive(_current_dir.string());
 }
 
 
-const std::vector<fs::path>& Filesystem::getFilesInDirectoryRecursive(const std::string& dir_path) {
+const std::vector<fs::path> Filesystem::getFilesInDirectoryRecursive(const std::string& dir_path) {
   // NEVER run the recursive version when on the system root OR when the current
   // directory's size is over "<SOME_SIZE>"
   if (dir_path == _SYS_ROOT || dir_path == _SYS_ROOT_ALT) {
@@ -454,7 +454,7 @@ bool Filesystem::createDirectory(fs::path parent_dir_path, const std::string& ne
   parent_dir_path = _getRelativeOrAbsolutePath(parent_dir_path);
 
   // If there already exists a file with that name, return false early.
-  if (fs::exists(parent_dir_path)) return false;
+  if (exists(parent_dir_path/new_dirname)) return false;
 
   fs::create_directory(parent_dir_path/new_dirname);
   return true;
@@ -649,6 +649,8 @@ bool Filesystem::copy(fs::path src_path, fs::path dest_path, const std::string& 
     if (!isDirectory(dest_path)) replacement_name += dest_path.extension().string(); // Files that aren't directories also need to append the extension (which hopefully exists)
     dest_path.replace_filename(replacement_name);
   }
+
+  // TODO: Check if the extension types are the same.
   
   try {
     // Get the copy options
@@ -658,6 +660,9 @@ bool Filesystem::copy(fs::path src_path, fs::path dest_path, const std::string& 
     if (overwrite_existing) {
       remove(dest_path);
     }
+
+    // Debug print
+    //if (DEBUG) println("Copying '", src_path, "' to '", dest_path, "'");
 
     fs::copy(src_path, dest_path, copy_options);
     return true;

@@ -18,7 +18,7 @@ MergeConfig::MergeConfig()
   : _merge_list()
   , _freed_indexes()
   , _naming_sequence(nullptr)
-  , _recursive_merge(false) {}
+  , _unpack_subdirectories(false) {}
 
 
 MergeConfig::~MergeConfig() {}
