@@ -1,9 +1,6 @@
 #include "filesystem.hpp"
 
 
-namespace fs = std::filesystem;
-
-
 /*************************************************************
 *************************** Private **************************
 *************************************************************/
@@ -238,9 +235,6 @@ bool Filesystem::setCurrentDirectory(fs::path dir_path) {
 //
 // Probaly wanna add a parameter to each function called like
 // "ignore_os_files" and "ignore_hidden_files" with default values set to TRUE
-// Use these to call two functions:
-//  bool isHiddenFile();
-//  bool isOperatingSystemFile();
 
 
 const std::vector<fs::path> Filesystem::getFilesInCurrentDirectory() {
@@ -426,7 +420,7 @@ bool Filesystem::isDirectory(fs::path path) {
 }
 
 
-bool Filesystem::isDirectory(fs::file_status status) {
+bool Filesystem::isDirectory(const fs::file_status& status) {
   return fs::is_directory(status);
 }
 
@@ -442,8 +436,107 @@ bool Filesystem::isRegularFile(fs::path path) {
 }
 
 
-bool Filesystem::isRegularFile(fs::file_status status) {
+bool Filesystem::isRegularFile(const fs::file_status& status) {
   return fs::is_regular_file(status);
+}
+
+
+bool Filesystem::isSystemFile(fs::path path) {
+  // Get path from relative/absolute
+  path = _getRelativeOrAbsolutePath(path);
+  
+  // File must exist to check.
+  if (!exists(path)) return false;
+
+  #if defined(_WIN32)
+    DWORD attrs = GetFileAttributesA(path.string().c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES) return false;
+    return (attrs & FILE_ATTRIBUTE_SYSTEM) != 0;
+  #else
+    struct stat st;
+    if (stat(path.string().c_str(), &st) != 0) return false;
+
+    // Consider "system file" if:
+    // - Owned by root (uid 0), OR
+    // - Is a special file (not a regular file)
+    if (st.st_uid == 0) return true;
+    if (!S_ISREG(st.st_mode)) return true; // device, socket, fifo, symlink, etc.
+
+    return false;
+  #endif
+}
+
+
+bool Filesystem::isProtectedFile(fs::path path) {
+  // Get path from relative/absolute
+  path = _getRelativeOrAbsolutePath(path);
+  
+  // File must exist to check.
+  if (!exists(path)) return false;
+
+  #if defined(_WIN32)
+  // Attempt to open the file
+    HANDLE hFile = CreateFileA(
+      path.string().c_str(),
+      GENERIC_READ,
+      0,                // no sharing: request exclusive access
+      NULL,
+      OPEN_EXISTING,
+      FILE_ATTRIBUTE_NORMAL,
+      NULL
+    );
+
+    // Error during opening
+    if (hFile == INVALID_HANDLE_VALUE) {
+      DWORD err = GetLastError();
+
+      // Locked/protected by another process
+      if (err == ERROR_SHARING_VIOLATION) return true;
+
+      // Some other failure (file not found, permission denied, etc.)
+      return false; 
+    }
+
+    // Cleanup && Success, so return false
+    CloseHandle(hFile);
+    return false;
+  #else
+    int fd = open(path.string().c_str(), O_RDONLY);
+
+    // Error during opening, so it must be protected somehow (permission denied, etc.)
+    if (fd == -1) return true; 
+
+    // Try a non-blocking advisory lock
+    if ((flock(fd, LOCK_EX | LOCK_NB) != 0) && (errno == EWOULDBLOCK)) {
+      // Another process has an advisory lock
+      close(fd);
+      return true; 
+    }
+
+    // Cleanup && Success,so return false.
+    close(fd);
+    return false;
+  #endif
+}
+
+
+bool Filesystem::isHiddenFile(fs::path path) {
+  // Get path from relative/absolute
+  path = _getRelativeOrAbsolutePath(path);
+
+  // File must exist to check.
+  if (!exists(path)) return false;
+
+  #if defined(_WIN32)
+    // Windows hidden files have a 'hidden' attribute attached to them
+    DWORD attrs = GetFileAttributesA(path.string().c_str());
+    if (attrs == INVALID_FILE_ATTRIBUTES) return false;
+    return (attrs & FILE_ATTRIBUTE_HIDDEN) != 0;
+  #else
+    // On POSIX, hidden = starts with '.'
+    const std::string filename = path.filename().string();
+    return !filename.empty() && filename[0] == '.';
+  #endif
 }
 
 

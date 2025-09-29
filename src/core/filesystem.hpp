@@ -12,11 +12,19 @@
   #include <windows.h>
   #include <cwchar>
 #elif defined(__linux__)
+  #include <sys/stat.h>
   #include <unistd.h>
+  #include <pwd.h>
+  #include <grp.h>
+  #include <cstring>
   #include <climits>
 #elif defined(__APPLE__)
-  #include <mach-o/dyld.h>
+#include <mach-o/dyld.h>
+  #include <sys/stat.h>
   #include <unistd.h>
+  #include <pwd.h>
+  #include <grp.h>
+  #include <cstring>
   #include <climits>
 #endif
 
@@ -259,7 +267,7 @@ class Filesystem {
      * @param status: fs::file_status of the file to check.
      * @returns bool: True if the path is a directory, otherwise false. NOTE: Always false if the path doesn't exist.
      */
-    static bool isDirectory(fs::file_status status);
+    static bool isDirectory(const fs::file_status& status);
 
 
     /**
@@ -275,7 +283,31 @@ class Filesystem {
      * @param status: fs::file_status of the file to check.
      * @returns bool: True if the path is a regular file, otherwise false. NOTE: Always false if the path doesn't exist.
      */
-    static bool isRegularFile(fs::file_status status);
+    static bool isRegularFile(const fs::file_status& status);
+
+
+    /**
+     * @brief Checks if a file is an operating-system file. 
+     * @param path: Path to the file
+     * @returns bool: True/False value.
+     */
+    static bool isSystemFile(fs::path path);
+
+
+    /**
+     * @brief Checks if a file is a protected file.
+     * @param path: Path to the file
+     * @returns bool: True/False value.
+     */
+    static bool isProtectedFile(fs::path path);
+
+
+    /**
+     * @brief Checks if a file is a hidden file.
+     * @param path: Path to the file
+     * @returns bool: True/False value.
+     */
+    static bool isHiddenFile(fs::path path);
 
 
     /**

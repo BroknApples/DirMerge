@@ -1,9 +1,6 @@
 #include "merge_config.hpp"
 
 
-namespace fs = std::filesystem;
-
-
 /*************************************************************
 *************************** Private **************************
 *************************************************************/
@@ -29,7 +26,13 @@ MergeConfig::~MergeConfig() {}
 *************************************************************/
 
 
-void MergeConfig::addFileToMergeList(const fs::path& file) {
+bool MergeConfig::addFileToMergeList(const fs::path& file) {
+  // Don't add empty and system files.
+  if (file == fs::path{} || file == "") return false;
+
+  // File must exist to add it. It also cannot be a system file.
+  if (!Filesystem::exists(file) || Filesystem::isSystemFile(file)) return false;
+
   // TODO: Add a setting that makes it so it doesn't check if
   // there are any empty index, but rather always pushes to the back
 
@@ -44,7 +47,7 @@ void MergeConfig::addFileToMergeList(const fs::path& file) {
 
     // Log data & return
     println("Added '", file, "' to the merge list at index [", lowest_free_index, "].");
-    return;
+    return true;
   }
 
   // No empty index, so add to the back.
@@ -52,14 +55,20 @@ void MergeConfig::addFileToMergeList(const fs::path& file) {
 
   // Log data
   println("Added '", file, "' to the merge list at index [", (_merge_list.size() - 1), "].");
+  return true;
 }
 
 
-void MergeConfig::addFilesToMergeList(const std::vector<fs::path>& files) {
+bool MergeConfig::addFilesToMergeList(const std::vector<fs::path>& files) {
+  // TODO: Make it so the files need to be added in a location that has enough space for them.
+  // Like a group of 10 files cannot go into indexes 0-4 if they are open.
+  
   // Just call the singular file add function on each.
   for (const fs::path& file : files) {
     addFileToMergeList(file);
   }
+
+  return true;
 }
 
 

@@ -7,6 +7,7 @@
 #include <queue>
 #include <algorithm>
 
+#include "filesystem.hpp"
 #include "merge_helpers.hpp"
 #include "../misc/utils.hpp"
 
@@ -50,15 +51,17 @@ class MergeConfig {
     /**
      * @brief Adds a file to the merge list
      * @param file: Path to the file to add
+     * @returns bool: True/False of success
      */
-    void addFileToMergeList(const fs::path& file);
+    bool addFileToMergeList(const fs::path& file);
     
 
     /**
      * @brief Adds multiple files to the merge list
      * @param files: List of files to add
+     * @returns bool: True/False of success
      */
-    void addFilesToMergeList(const std::vector<fs::path>& files);
+    bool addFilesToMergeList(const std::vector<fs::path>& files);
 
 
     /**
