@@ -1,0 +1,18 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "generator": "MinGW Makefiles",
+      "binaryDir": "build",
+      "cacheVariables": { 
+        "CMAKE_PREFIX_PATH": "C:/Qt/6.9.3/mingw_64/lib/cmake"
+      }
+    }
+  ]
+}

@@ -4,3 +4,4 @@ bin/
 .git/
 *.exe
 *.zip
+CMakePrsets.json
