@@ -19,6 +19,9 @@ set(SOURCES
   src/core/filesystem.cpp
   src/core/merge_config.cpp
   src/core/merge_manager.cpp
+
+  # UI
+  src/ui/app.cpp
 )
 
 

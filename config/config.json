@@ -1,7 +1,7 @@
 {
   "Window Settings": {
-    "Window Height": 1920,
-    "Window Width": 1080,
+    "Window Width": 1280,
+    "Window Height": 720,
     "Stylesheet Path": "config/stylesheets/default_dark.json"
   },
   "Filesystem Settings": {

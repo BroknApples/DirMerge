@@ -85,8 +85,9 @@ class Filesystem {
     /**
      * @brief Initialize class defaults.
      *        NOTE: Config::init() must be called first.
+     * @returns bool: True/False of initialization success.
      */
-    static void init();
+    static bool init();
 
 
     /**

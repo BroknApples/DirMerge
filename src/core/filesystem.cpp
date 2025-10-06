@@ -36,11 +36,11 @@ std::pair<Filesystem::ClipboardActionType, std::vector<fs::path>> Filesystem::_c
 *************************************************************/
 
 
-void Filesystem::init() {
+bool Filesystem::init() {
   // Config MUST be initialized before calling this function
   if (!Config::isInitialized()) {
     eprintln("Error: Please call 'Config::init()' before 'Filesystem::init()'");
-    return;
+    return false;
   }
 
   // Setup clipboard and history
@@ -48,7 +48,8 @@ void Filesystem::init() {
   _clipboard = std::make_pair(ClipboardActionType::NONE, std::vector<fs::path>{});
 
   // Set the starting directory to the saved default.
-  setCurrentDirectory(Config::getString(Config::Keys::DEFAULT_DIRECTORY));
+  if (!Filesystem::setCurrentDirectory(Config::getString(Config::Keys::DEFAULT_DIRECTORY))) return false;
+  return true;
 }
 
 
