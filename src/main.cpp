@@ -19,7 +19,7 @@
 #include <string>
 #include <limits>
 
-#include "ui/app.hpp"
+#include "ui/application.hpp"
 #include "core/config.hpp"
 #include "core/filesystem.hpp"
 #include "core/merge_config.hpp"

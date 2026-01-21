@@ -3,12 +3,15 @@
 
 
 #include <memory>
+
 #include <QApplication>
-#include <QMainWindow>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QUrl>
+#include <QString>
 
 #include "../core/config.hpp"
 #include "../misc/utils.hpp"
-
 
 /**
  * @brief GUI-Application entry-point class.
@@ -17,16 +20,9 @@
  */
 class Application {
   private:
-    /** Qt application object */
-    static std::unique_ptr<QApplication> _app;
-
-
-    /** Qt main window object */
-    static std::unique_ptr<QMainWindow> _window;
-
-
-    /** Is the application currently running? */
-    static bool _active;
+    static std::unique_ptr<QGuiApplication> _app; /** Qt application object (Handles event loop and Widget module) */
+    static std::unique_ptr<QQmlApplicationEngine> _engine; /** Qt QML Engine (Loads and manages the QML UI) */
+    static bool _active; /** Is the application currently running? */
 
 
   public:

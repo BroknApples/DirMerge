@@ -1,3 +1,9 @@
+/*
+Simple timer class.
+
+© 2025 BroknApples — modifications allowed; do not remove this notice.
+*/
+
 #ifndef INTERVAL_TIMER_HPP
 #define INTERVAL_TIMER_HPP
 

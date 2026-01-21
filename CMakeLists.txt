@@ -1,6 +1,6 @@
 # Setup project
 cmake_minimum_required(VERSION 3.20)
-project("fmerge" LANGUAGES CXX)
+project("VSFM" LANGUAGES CXX)
 
 
 # Set some options
@@ -21,7 +21,7 @@ set(SOURCES
   src/core/merge_manager.cpp
 
   # UI
-  src/ui/app.cpp
+  src/ui/application.cpp
 )
 
 
@@ -33,10 +33,23 @@ set(INCLUDES
 
 # Find Qt6 on the system
 #set(CMAKE_PREFIX_PATH "C:/Qt/6.9.3/mingw_64/lib/cmake") # NOTE: Replace with your local path to Qt
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick)
 
 
 # Create executable and link libraries/includes
 add_executable(${PROJECT_NAME} ${SOURCES})
+qt_add_qml_module(${PROJECT_NAME}
+  URI vsfm
+  VERSION 1.0
+  RESOURCE_PREFIX /qt/qml
+  QML_FILES
+    src/ui/app_interface.qml  # Ensure the path to your QML file is correct
+)
 target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDES})
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  Qt6::Core 
+  Qt6::Gui 
+  Qt6::Widgets 
+  Qt6::Qml 
+  Qt6::Quick
+)

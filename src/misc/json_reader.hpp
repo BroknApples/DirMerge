@@ -1,14 +1,23 @@
+/*
+Simple wrapper for the nlohmann json library.
+
+© 2025 BroknApples — modifications allowed; do not remove this notice.
+*/
+
 #ifndef JSON_READER_HPP
 #define JSON_READER_HPP
 
 
+//#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
 #include <filesystem>
 
+// May need to be modified as I used custom print
+// statements in the project I created this in.
 #include "utils.hpp"
-#include "../../thirdparty/json/single_include/nlohmann/json.hpp"
+#include "../../thirdparty/json/single_include/nlohmann/json.hpp" // Change to path to nlohmann::json
 
 
 namespace fs = std::filesystem;

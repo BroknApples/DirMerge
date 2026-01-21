@@ -1,4 +1,6 @@
-#include "app.hpp"
+#include "application.hpp"
+
+using namespace Qt::StringLiterals;
 
 
 /*************************************************************
@@ -9,8 +11,8 @@
 // ------------------------------------- //
 // -------- Static Declarations -------- //
 // ------------------------------------- //
-std::unique_ptr<QApplication> Application::_app = nullptr;
-std::unique_ptr<QMainWindow> Application::_window = nullptr;
+std::unique_ptr<QGuiApplication> Application::_app = nullptr;
+std::unique_ptr<QQmlApplicationEngine> Application::_engine = nullptr;
 bool Application::_active = false;
 
 /*************************************************************
@@ -30,25 +32,32 @@ bool Application::init(int argc, char* argv[]) {
     return false;
   }
 
-  // Setup app
-  _app = std::make_unique<QApplication>(argc, argv);
+  // Setup app & engine
+  _app = std::make_unique<QGuiApplication>(argc, argv);
+  _engine = std::make_unique<QQmlApplicationEngine>();
 
-  // Setup Main Window
-  _window = std::make_unique<QMainWindow>();
-  const int DEFAULT_WIDTH = Config::getInt(Config::Keys::WINDOW_WIDTH);
-  const int DEFAULT_HEIGHT = Config::getInt(Config::Keys::WINDOW_HEIGHT);
-  _window->setWindowTitle("VSFM");
-  _window->resize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+  // Link C++ Logic here
+  // static FileHandler fileHandler; 
+  // _engine->rootContext()->setContextProperty("FileBackend", &fileHandler);
 
-  // TODO: Initialize Widgets here
-
+  // Url
+  //const QUrl url(u"qrc:/qt/qml/vsfm/src/ui/app_interface.qml"_s); TODO: Set back to this for production
+  const QUrl url = QUrl::fromLocalFile("H:/Dev/VSFM/src/ui/app_interface.qml");
+  QObject::connect(_engine.get(), &QQmlApplicationEngine::objectCreated,
+                   _app.get(), [url](QObject *obj, const QUrl &objUrl) {
+    if (!obj && url == objUrl) QCoreApplication::exit(-1);
+  }, Qt::QueuedConnection);
+  _engine->load(url);
+  
+  // Ensure setup was valid
+  if (_engine->rootObjects().isEmpty()) return false;
   return true;
 }
 
 
 void Application::run() {
   // Programmer did NOT run 'Application::init(argc, argv);'
-  if ((_app == nullptr) || (_window  == nullptr)) {
+  if ((_app == nullptr) || (_engine  == nullptr)) {
     eprintln("Error: Application::run() called before Application::init()!");
     return;
   }
@@ -61,7 +70,6 @@ void Application::run() {
 
   // Set blocking variable while the program is running.
   _active = true;
-  _window->show();
-  _app->exec();
+  if (_active) _app->exec();
   _active = false;
 }
