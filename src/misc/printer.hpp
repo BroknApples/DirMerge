@@ -8,8 +8,8 @@
 
 // Defines
 #ifndef NO_PRINT
-#define NO_PRINT true // NOTE: Change to whatever you want
-  #endif
+  #define NO_PRINT true // NOTE: Change to whatever you want
+#endif
 #ifndef NO_ERROR
   #define NO_ERROR false // NOTE: Change to whatever you want
 #endif
