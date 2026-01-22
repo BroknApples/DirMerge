@@ -50,7 +50,7 @@ bool MergeManager::_attemptFileCopying(std::vector<fs::path>& original_paths, co
 
 
 void MergeManager::startMerge(std::unique_ptr<MergeConfig> merge_config) {
-  if (DEBUG) println("Starting Merge...");
+  println("Starting Merge...");
   
   // TODO: Actually add a helper function that does all this, add it to a 
   // thread for processing. ig ill need a processing queue too then.
@@ -186,5 +186,5 @@ void MergeManager::startMerge(std::unique_ptr<MergeConfig> merge_config) {
   _completed_merges.push_back(std::move(config_iterator->second));
   _active_merges.erase(config_iterator);
 
-  if (DEBUG) println("Merge Complete.");
+  println("Merge Complete.");
 }

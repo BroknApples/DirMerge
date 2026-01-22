@@ -14,6 +14,7 @@
   #include <windows.h>
 #endif // Platform specific includes
 
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -27,7 +28,7 @@
 #include "core/merge_helpers.hpp"
 #include "misc/clock.hpp"
 #include "misc/interval_timer.hpp"
-#include "misc/utils.hpp"
+#include "misc/printer.hpp"
 
 
 namespace fs = std::filesystem;

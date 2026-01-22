@@ -249,7 +249,7 @@ const std::vector<fs::path> Filesystem::getFilesInDirectory(const std::string& d
     // When on Windows, if the root is attempting to be accessed, instead return each drive's path
     if (dir_path == _SYS_ROOT || dir_path == _SYS_ROOT_ALT) {
       // DEBUG Print
-      if (DEBUG) println("'dir_path' is ROOT!");
+      println("'dir_path' is ROOT!");
 
       std::vector<fs::path> roots;
 
@@ -292,8 +292,7 @@ const std::vector<fs::path> Filesystem::getFilesInDirectoryRecursive(const std::
   // NEVER run the recursive version when on the system root OR when the current
   // directory's size is over "<SOME_SIZE>"
   if (dir_path == _SYS_ROOT || dir_path == _SYS_ROOT_ALT) {
-    // DEBUG Print
-    if (DEBUG) println("'dir_path' is ROOT!");
+    println("'dir_path' is ROOT!");
 
     // TODO: Add some checker for file size. If the directory is over like 1GB
     // or something in size it would take forever to check.
@@ -331,8 +330,7 @@ const int Filesystem::getTotalNumberOfFilesInDirectoryRecursive(const std::strin
   // NEVER run the recursive version when on the system root OR when the current
   // directory's size is over "<SOME_SIZE>"
   if (dir_path == _SYS_ROOT || dir_path == _SYS_ROOT_ALT) {
-    // DEBUG Print
-    if (DEBUG) println("'dir_path' is ROOT!");
+    println("'dir_path' is ROOT!");
 
     // TODO: Add some checker for file size. If the directory is over like 1GB
     // or something in size it would take forever to check.
@@ -755,8 +753,7 @@ bool Filesystem::copy(fs::path src_path, fs::path dest_path, const std::string& 
       remove(dest_path);
     }
 
-    // Debug print
-    //if (DEBUG) println("Copying '", src_path, "' to '", dest_path, "'");
+    println("Copying '", src_path, "' to '", dest_path, "'");
 
     fs::copy(src_path, dest_path, copy_options);
     return true;

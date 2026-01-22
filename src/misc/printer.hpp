@@ -1,32 +1,45 @@
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#ifndef PRINTER_HPP
+#define PRINTER_HPP
+
 
 #include <iostream>
 #include <type_traits>
 
 
-/***********************************************************
-******************* beg Random Variables *******************
-***********************************************************/
+// Defines
+#ifndef NO_PRINT
+#define NO_PRINT true // NOTE: Change to whatever you want
+  #endif
+#ifndef NO_ERROR
+  #define NO_ERROR false // NOTE: Change to whatever you want
+#endif
 
 
-/** @brief Is this executable in DEBUG mode? */
-constexpr bool DEBUG = true;
+/**
+ * @brief Is the NO_PRINT var ticked?
+ * @returns bool: True/False of var
+ */
+inline constexpr bool noPrint() {
+  #if defined(NO_PRINT)
+    return true;
+  #else
+    return false;
+  #endif
+}
 
 
-/***********************************************************
-******************* end Random Variables *******************
-***********************************************************/
+/**
+ * @brief Is the NO_ERROR var ticked?
+ * @returns bool: True/False of var
+ */
 
-
-/***********************************************************
-******************* beg Printing Methods *******************
-***********************************************************/
-
-
-// ----------------------------------------- //
-// ---------- Core Implementation ---------- //
-// ----------------------------------------- //
+inline constexpr bool noError() {
+  #if defined(NO_ERROR)
+    return true;
+  #else
+    return false;
+  #endif
+}
 
 
 /**
@@ -50,6 +63,7 @@ struct is_streamable<T, std::void_t<decltype(std::declval<std::ostream&>() << st
 template <typename T>
 typename std::enable_if<is_streamable<T>::value>::type
 print(std::ostream& os, const T& val) {
+  if (noPrint()) return;
   os << val;
 }
 
@@ -62,6 +76,7 @@ print(std::ostream& os, const T& val) {
 template <typename T>
 typename std::enable_if<!is_streamable<T>::value>::type
 print(std::ostream& os, const T&) {
+  if (noPrint()) return;
   os << "[Unsupported Type]";
 }
 
@@ -76,6 +91,7 @@ print(std::ostream& os, const T&) {
  */
 template <typename T, typename... Args>
 void print(std::ostream& os, const T& first, const Args&... args) {
+  if (noPrint()) return;
   print(os, first);
   if constexpr (sizeof...(args) > 0) {
     print(os, args...);
@@ -93,6 +109,7 @@ void print(std::ostream& os, const T& first, const Args&... args) {
 template <typename T>
 typename std::enable_if<is_streamable<T>::value>::type
 println(std::ostream& os, const T& val) {
+  if (noPrint()) return;
   os << val << std::endl;
 }
 
@@ -105,6 +122,7 @@ println(std::ostream& os, const T& val) {
 template <typename T>
 typename std::enable_if<!is_streamable<T>::value>::type
 println(std::ostream& os, const T&) {
+  if (noPrint()) return;
   os << "[Unsupported Type]" << std::endl;
 }
 
@@ -119,6 +137,7 @@ println(std::ostream& os, const T&) {
  */
 template <typename T, typename... Args>
 void println(std::ostream& os, const T& first, const Args&... args) {
+  if (noPrint()) return;
   print(os, first);
   if constexpr (sizeof...(args) > 0) {
     print(os, args...);
@@ -140,6 +159,7 @@ void println(std::ostream& os, const T& first, const Args&... args) {
  */
 template <typename... Args>
 void print(const Args&... args) {
+  if (noPrint()) return;
   print(std::cout, args...);
 }
 
@@ -150,6 +170,7 @@ void print(const Args&... args) {
  */
 template <typename... Args>
 void println(const Args&... args) {
+  if (noPrint()) return;
   println(std::cout, args...);
 }
 
@@ -160,6 +181,7 @@ void println(const Args&... args) {
  */
 template <typename... Args>
 void eprint(const Args&... args) {
+  if (noError()) return;
   print(std::cerr, args...);
 }
 
@@ -170,13 +192,9 @@ void eprint(const Args&... args) {
  */
 template <typename... Args>
 void eprintln(const Args&... args) {
+  if (noError()) return;
   println(std::cerr, args...);
 }
 
 
-/***********************************************************
-******************* end Printing Methods *******************
-***********************************************************/
-
-
-#endif // UTILS_HPP
+#endif // PRINTER_HPP

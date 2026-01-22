@@ -11,7 +11,7 @@ Simple timer class.
 #include <chrono>
 #include <optional>
 
-#include "utils.hpp"
+#include "printer.hpp"
 
 
 /**

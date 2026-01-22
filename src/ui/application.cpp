@@ -33,6 +33,7 @@ bool Application::init(int argc, char* argv[]) {
   }
 
   // Setup app & engine
+  QQuickStyle::setStyle("Fusion"); // Set style to "Fusion"
   _app = std::make_unique<QGuiApplication>(argc, argv);
   _engine = std::make_unique<QQmlApplicationEngine>();
 
@@ -41,8 +42,14 @@ bool Application::init(int argc, char* argv[]) {
   // _engine->rootContext()->setContextProperty("FileBackend", &fileHandler);
 
   // Url
-  //const QUrl url(u"qrc:/qt/qml/vsfm/src/ui/app_interface.qml"_s); TODO: Set back to this for production
-  const QUrl url = QUrl::fromLocalFile("H:/Dev/VSFM/src/ui/app_interface.qml");
+  #ifdef APP_RELEASE_BUILD
+    println("Using Release QUrl");
+    const QUrl url(u"qrc:/qt/qml/vsfm/src/ui/app_interface.qml"_s);
+  #else
+    println("Using Dev QUrl");
+    const QUrl url = QUrl::fromLocalFile("H:/Dev/VSFM/src/ui/app_interface.qml");
+  #endif
+  
   QObject::connect(_engine.get(), &QQmlApplicationEngine::objectCreated,
                    _app.get(), [url](QObject *obj, const QUrl &objUrl) {
     if (!obj && url == objUrl) QCoreApplication::exit(-1);

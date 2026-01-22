@@ -9,9 +9,11 @@
 #include <QQmlContext>
 #include <QUrl>
 #include <QString>
+#include <QtQuickControls2/QQuickStyle>
 
 #include "../core/config.hpp"
-#include "../misc/utils.hpp"
+#include "../misc/printer.hpp"
+
 
 /**
  * @brief GUI-Application entry-point class.
