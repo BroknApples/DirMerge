@@ -8,7 +8,7 @@
 
 // Defines
 #ifndef NO_PRINT
-  #define NO_PRINT true // NOTE: Change to whatever you want
+  #define NO_PRINT false // NOTE: Change to whatever you want
 #endif
 #ifndef NO_ERROR
   #define NO_ERROR false // NOTE: Change to whatever you want
@@ -20,11 +20,7 @@
  * @returns bool: True/False of var
  */
 inline constexpr bool noPrint() {
-  #if defined(NO_PRINT)
-    return true;
-  #else
-    return false;
-  #endif
+  return NO_PRINT;
 }
 
 
@@ -32,13 +28,8 @@ inline constexpr bool noPrint() {
  * @brief Is the NO_ERROR var ticked?
  * @returns bool: True/False of var
  */
-
 inline constexpr bool noError() {
-  #if defined(NO_ERROR)
-    return true;
-  #else
-    return false;
-  #endif
+  return NO_ERROR;
 }
 
 

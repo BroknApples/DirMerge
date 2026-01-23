@@ -10,6 +10,7 @@
 #include <QUrl>
 #include <QString>
 #include <QtQuickControls2/QQuickStyle>
+#include <QLoggingCategory>
 
 #include "../core/config.hpp"
 #include "../misc/printer.hpp"

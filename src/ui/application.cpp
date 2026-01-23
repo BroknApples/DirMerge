@@ -41,7 +41,7 @@ bool Application::init(int argc, char* argv[]) {
   // static FileHandler fileHandler; 
   // _engine->rootContext()->setContextProperty("FileBackend", &fileHandler);
 
-  // Url
+  // Url const
   #ifdef APP_RELEASE_BUILD
     println("Using Release QUrl");
     const QUrl url(u"qrc:/qt/qml/vsfm/src/ui/app_interface.qml"_s);
@@ -49,7 +49,11 @@ bool Application::init(int argc, char* argv[]) {
     println("Using Dev QUrl");
     const QUrl url = QUrl::fromLocalFile("H:/Dev/VSFM/src/ui/app_interface.qml");
   #endif
+
+  // Disable lgoging
+  QLoggingCategory::setFilterRules(QStringLiteral("qt.qpa.mime=false"));
   
+  // Setup Url
   QObject::connect(_engine.get(), &QQmlApplicationEngine::objectCreated,
                    _app.get(), [url](QObject *obj, const QUrl &objUrl) {
     if (!obj && url == objUrl) QCoreApplication::exit(-1);
