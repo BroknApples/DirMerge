@@ -32,16 +32,23 @@ bool Application::init(int argc, char* argv[]) {
     return false;
   }
 
+
   // Setup app & engine
   QQuickStyle::setStyle("Fusion"); // Set style to "Fusion"
   _app = std::make_unique<QGuiApplication>(argc, argv);
   _engine = std::make_unique<QQmlApplicationEngine>();
 
-  // Link C++ Logic here
-  // static FileHandler fileHandler; 
-  // _engine->rootContext()->setContextProperty("FileBackend", &fileHandler);
 
-  // Url const
+  // Set flags
+  QLoggingCategory::setFilterRules(QStringLiteral("qt.qpa.mime=false")); // Disable Qt logging
+
+
+  // Link C++ logic
+  static AppBackend app_backend; 
+  _engine->rootContext()->setContextProperty("AppBackend", &app_backend); // Makes the C++ object "file_backend" available in QML as "FileBackend"
+
+
+  // Load qml using a QUrl
   #ifdef APP_RELEASE_BUILD
     println("Using Release QUrl");
     const QUrl url(u"qrc:/qt/qml/vsfm/src/ui/app_interface.qml"_s);
@@ -49,16 +56,12 @@ bool Application::init(int argc, char* argv[]) {
     println("Using Dev QUrl");
     const QUrl url = QUrl::fromLocalFile("H:/Dev/VSFM/src/ui/app_interface.qml");
   #endif
-
-  // Disable lgoging
-  QLoggingCategory::setFilterRules(QStringLiteral("qt.qpa.mime=false"));
-  
-  // Setup Url
   QObject::connect(_engine.get(), &QQmlApplicationEngine::objectCreated,
                    _app.get(), [url](QObject *obj, const QUrl &objUrl) {
     if (!obj && url == objUrl) QCoreApplication::exit(-1);
   }, Qt::QueuedConnection);
   _engine->load(url);
+  
   
   // Ensure setup was valid
   if (_engine->rootObjects().isEmpty()) return false;

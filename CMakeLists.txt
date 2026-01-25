@@ -22,6 +22,7 @@ set(SOURCES
 
   # UI
   src/ui/application.cpp
+  src/ui/app_backend.cpp
 )
 
 

@@ -172,54 +172,32 @@ ApplicationWindow {
 
           // [PLACE INTERACTIVE DELEGATE HERE]
           delegate: Item {
-            width: fileGrid.cellWidth
-            height: fileGrid.cellHeight
+            id: fileDelegate
+            width: 100; height: 100 // Example sizes
 
             Rectangle {
-              id: bg
               anchors.fill: parent
-              anchors.margins: 10
-              color: "transparent"
-              radius: 8
+              color: mouseArea.containsMouse ? "#333" : "transparent"
+              border.color: mouseArea.pressed ? "#27ae60" : "transparent"
               
-              border.color: itemMouseArea.containsPress ? "#27ae60" : 
-                            itemMouseArea.containsMouse ? "#333" : "transparent"
-              
-              Rectangle {
-                anchors.fill: parent
-                color: "white"
-                opacity: itemMouseArea.containsMouse ? 0.05 : 0
-                radius: 8
-              }
-
               Column {
                 anchors.centerIn: parent
-                spacing: 8
-                
-                Rectangle {
-                  width: 64; height: 64; color: "#252525"; radius: 8
-                  anchors.horizontalCenter: parent.horizontalCenter
-                  Text { text: model.icon; anchors.centerIn: parent; font.pixelSize: 24 }
-                }
-                
-                Text { 
-                  text: model.fileName
-                  color: "white"
-                  font.pixelSize: 11
-                  width: parent.width - 20
-                  elide: Text.ElideRight
-                  horizontalAlignment: Text.AlignHCenter
-                  anchors.horizontalCenter: parent.horizontalCenter 
-                }
+                Text { text: icon; font.pixelSize: 32; anchors.horizontalCenter: parent.horizontalCenter }
+                Text { text: fileName; color: "white"; elide: Text.ElideRight; width: 80 }
               }
 
               MouseArea {
-                id: itemMouseArea
+                id: mouseArea
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                  fileGrid.currentIndex = index
-                  console.log("Selected: " + model.fileName)
+                  // Construct the full path using the property defined at line 17
+                  let fullPath = currentPath + "/" + fileName
+                  
+                  // Call the C++ backend to add this specific file
+                  AppBackend.addFileToMerge(fullPath)
+                  
+                  console.log("Added to merge list: " + fullPath)
                 }
               }
             }
@@ -280,12 +258,15 @@ ApplicationWindow {
           Button {
             text: "MERGE FILES"
             font.bold: true
-            palette.buttonText: "white"
+            
+            onClicked: {
+              // currentPath is defined at line 16
+              AppBackend.merge(currentPath, deleteOriginals.checked)
+            }
+            
             background: Rectangle {
-              implicitWidth: 140
-              implicitHeight: 44
-              radius: 6
               color: parent.down ? "#1e8449" : "#27ae60"
+              radius: 6
             }
           }
         }

@@ -21,19 +21,19 @@ std::vector<std::unique_ptr<MergeConfig>> MergeManager::_completed_merges{};
 
 
 void MergeManager::_restoreFiles(const std::vector<fs::path>& original_paths, const fs::path& dest_dir) {
-  // Currently just force remove the destination directory.
+  // Currently, just force remove the destination directory.
   Filesystem::removeDirectory(dest_dir, true);
 }
 
 
 bool MergeManager::_attemptFileCopying(std::vector<fs::path>& original_paths, const fs::path& filename, const fs::path& dest_dir, NamingSequence& naming_sequence, bool overwrite_existing) {
-  // Rename file passes. Add path to the original_paths vector
+  // Rename file passes ==> Add path to the original_paths vector
   if (Filesystem::copy(filename, (dest_dir/filename.filename()), naming_sequence.getNextName(filename), overwrite_existing)) {
     original_paths.push_back(filename);
     return true;
   }
 
-  // Failure. Restore file paths here.
+  // Failure ==> Restore file paths here.
   _restoreFiles(original_paths, dest_dir);
   return false;
 }

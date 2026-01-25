@@ -12,6 +12,7 @@
 #include <QtQuickControls2/QQuickStyle>
 #include <QLoggingCategory>
 
+#include "app_backend.hpp"
 #include "../core/config.hpp"
 #include "../misc/printer.hpp"
 

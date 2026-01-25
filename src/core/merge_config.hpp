@@ -35,17 +35,12 @@ class MergeConfig {
     // TODO: List more options here.
 
   public:
-    /**
-     * @brief Default Constructor. Set all values to default saved in config.json
-     * TODO: Implement defaults in 'config.json'
-     */
-    MergeConfig();
-
-
-    /**
-     * @brief Default Destructor.
-     */
-    ~MergeConfig();
+    MergeConfig(); /** @brief Default Constructor. Set all values to default saved in 'config.json' | TODO: Implement defaults in 'config.json' */
+    ~MergeConfig(); /** @brief Default Destructor. */
+    MergeConfig(MergeConfig&& other) noexcept = default;            /** @brief Allow Move Constructor */
+    MergeConfig& operator=(MergeConfig&& other) noexcept = default; /** @brief Allow Move Assignment */
+    MergeConfig(const MergeConfig&) = delete;                       /** @brief Explicitly delete Copy operations to be safe */
+    MergeConfig& operator=(const MergeConfig&) = delete;            /** @brief Explicitly delete Copy operations to be safe */
 
 
     /**
