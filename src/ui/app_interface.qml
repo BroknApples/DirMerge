@@ -13,26 +13,9 @@ ApplicationWindow {
 
   // --- State & Data ---
   property string viewMode: "grid"
-  property string currentPath: "/Users/documents/projects/export"
-
-  ListModel {
-    id: fileModel
-    ListElement { fileName: "Document_01.pdf"; icon: "📄" }
-    ListElement { fileName: "Image_Final.png"; icon: "🖼️" }
-    ListElement { fileName: "Report_2026.docx"; icon: "📝" }
-  }
 
 
   // [PLACE FUNCTIONS HERE]
-  function refreshList() {
-    fileModel.clear()
-    // TODO: Here
-  }
-
-  function addFile(name, iconType) {
-    fileModel.append({ "fileName": name, "icon": iconType });
-  }
-
 
 
   ColumnLayout {
@@ -43,12 +26,15 @@ ApplicationWindow {
     // TOP BAR
     // ======================
     Rectangle {
+      id: delegateRoot
       Layout.fillWidth: true
       Layout.preferredHeight: 56
       color: "#1e1e1e"
 
       MouseArea {
+        id: mouseArea
         anchors.fill: parent
+        hoverEnabled: true
         onPressed: window.startSystemMove()
       }
 
@@ -73,7 +59,7 @@ ApplicationWindow {
           // NEW: Reload Button
           Button { 
             text: "↻"
-            onClicked: addFile("New_File_" + fileModel.count, "📄") 
+            //onClicked: //TODO:
           }
         }
 
@@ -157,7 +143,7 @@ ApplicationWindow {
           cellWidth: 150
           cellHeight: 150
           clip: true
-          model: fileModel
+          model: AppBackend ? AppBackend.file_model : null
 
           // [PLACE SCROLLBAR HERE]
           ScrollBar.vertical: ScrollBar {
@@ -177,27 +163,26 @@ ApplicationWindow {
 
             Rectangle {
               anchors.fill: parent
-              color: mouseArea.containsMouse ? "#333" : "transparent"
-              border.color: mouseArea.pressed ? "#27ae60" : "transparent"
+              color: mouseArea.containsMouse ? "#333" : "transparent" 
+              border.color: mouseArea.containsMouse ? "#444" : "transparent"
               
               Column {
                 anchors.centerIn: parent
                 Text { text: icon; font.pixelSize: 32; anchors.horizontalCenter: parent.horizontalCenter }
-                Text { text: fileName; color: "white"; elide: Text.ElideRight; width: 80 }
+                Text { text: filename; color: "white"; elide: Text.ElideRight; width: 80 }
               }
 
               MouseArea {
-                id: mouseArea
                 anchors.fill: parent
-                hoverEnabled: true
                 onClicked: {
-                  // Construct the full path using the property defined at line 17
-                  let fullPath = currentPath + "/" + fileName
-                  
-                  // Call the C++ backend to add this specific file
-                  AppBackend.addFileToMerge(fullPath)
-                  
-                  console.log("Added to merge list: " + fullPath)
+                  if (is_dir) {
+                    // Ensure we don't end up with "C://folder"
+                    let newPath = AppBackend.current_path
+                    if (!newPath.endsWith("/")) newPath += "/"
+                    AppBackend.setPath(newPath + filename)
+                  } else {
+                    AppBackend.addFileToMerge(AppBackend.current_path + "/" + filename)
+                  }
                 }
               }
             }
@@ -213,7 +198,7 @@ ApplicationWindow {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: 12
-            text: currentPath
+            text: AppBackend ? AppBackend.current_path : ""
             color: "#777"
             font.family: "Monospace"
           }
@@ -261,7 +246,7 @@ ApplicationWindow {
             
             onClicked: {
               // currentPath is defined at line 16
-              AppBackend.merge(currentPath, deleteOriginals.checked)
+              AppBackend.merge()
             }
             
             background: Rectangle {

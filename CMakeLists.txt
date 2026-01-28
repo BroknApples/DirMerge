@@ -23,6 +23,7 @@ set(SOURCES
   # UI
   src/ui/application.cpp
   src/ui/app_backend.cpp
+  src/ui/filesystem_model.cpp
 )
 
 

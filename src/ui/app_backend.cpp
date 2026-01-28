@@ -14,7 +14,7 @@
 *************************************************************/
 
 AppBackend::AppBackend(QObject *parent) : QObject(parent) {
-
+  setPath(QDir::homePath());
 }
 
 /*************************************************************
@@ -22,24 +22,33 @@ AppBackend::AppBackend(QObject *parent) : QObject(parent) {
 *************************************************************/
 
 
-Q_INVOKABLE void AppBackend::merge(const QString &dest_path, bool remove_sources) {
-  // 1. Prepare the current config with UI values
-  _active_merge_config.setDestinationDirectory(fs::path(dest_path.toStdString()));
-  _active_merge_config.setRemoveSourcePostCopyFlag(remove_sources);
+Q_INVOKABLE void AppBackend::merge() {
+  // 1. Set a naming sequence if one isn't set (your Manager expects one)
   
-  // 2. Set a naming sequence if one isn't set (your Manager expects one)
-  _active_merge_config.setNamingSequence(std::make_unique<NumericalNamingSequence>());
 
-  // 3. MOVE the config into a unique_ptr to pass to the Manager
+  // 2. MOVE the config into a unique_ptr to pass to the Manager
   // This avoids the "use of deleted function" error
   auto ptr = std::make_unique<MergeConfig>(std::move(_active_merge_config));
   
-  // 4. Start the merge
+  // 3. Start the merge
   MergeManager::startMerge(std::move(ptr));
 }
 
 
-Q_INVOKABLE void AppBackend::addFileToMerge(const QString& path) {
-  fs::path p(path.toStdString());
-  _active_merge_config.addFileToMergeList(p);
+void AppBackend::setPath(const QString &path) {
+  _current_path = path;
+  emit currentPathChanged();
+
+  QDir dir(path);
+  QVector<FileItem> items;
+
+  for (const QFileInfo &info : dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
+    items.push_back({
+      info.fileName(),
+      info.isDir() ? "📁" : "📄",
+      info.isDir()
+    });
+  }
+
+  _file_model.setFiles(items);
 }

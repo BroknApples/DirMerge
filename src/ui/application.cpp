@@ -47,7 +47,7 @@ bool Application::init(int argc, char* argv[]) {
   static AppBackend app_backend; 
   _engine->rootContext()->setContextProperty("AppBackend", &app_backend); // Makes the C++ object "file_backend" available in QML as "FileBackend"
 
-
+  
   // Load qml using a QUrl
   #ifdef APP_RELEASE_BUILD
     println("Using Release QUrl");
