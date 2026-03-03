@@ -19,7 +19,7 @@ struct FileItem {
 /**
  * @brief TODO:
  */
-class FileSystemModel : public QAbstractListModel {
+class FilesystemModel : public QAbstractListModel {
   Q_OBJECT
 
 
@@ -34,7 +34,7 @@ class FileSystemModel : public QAbstractListModel {
       IsDirRole
     };
 
-    explicit FileSystemModel(QObject *parent = nullptr);
+    explicit FilesystemModel(QObject *parent = nullptr);
 
     /**
      * @brief TODO:

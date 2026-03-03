@@ -1,16 +1,16 @@
 #include "filesystem_model.hpp"
 
 
-FileSystemModel::FileSystemModel(QObject *parent)
+FilesystemModel::FilesystemModel(QObject *parent)
 : QAbstractListModel(parent) {}
 
 
-int FileSystemModel::rowCount(const QModelIndex &) const {
+int FilesystemModel::rowCount(const QModelIndex &) const {
   return _files.size();
 }
 
 
-QVariant FileSystemModel::data(const QModelIndex &index, int role) const {
+QVariant FilesystemModel::data(const QModelIndex &index, int role) const {
   if (!index.isValid()) return {};
 
   const FileItem &item = _files[index.row()];
@@ -24,7 +24,7 @@ QVariant FileSystemModel::data(const QModelIndex &index, int role) const {
 }
 
 
-QHash<int, QByteArray> FileSystemModel::roleNames() const {
+QHash<int, QByteArray> FilesystemModel::roleNames() const {
   return {
     { FileNameRole, "filename" },
     { IconRole,     "icon" },
@@ -33,14 +33,14 @@ QHash<int, QByteArray> FileSystemModel::roleNames() const {
 }
 
 
-void FileSystemModel::setFiles(QVector<FileItem> files) {
+void FilesystemModel::setFiles(QVector<FileItem> files) {
   beginResetModel();
   _files = std::move(files);
   endResetModel();
 }
 
 
-Q_INVOKABLE void FileSystemModel::clear() {
+Q_INVOKABLE void FilesystemModel::clear() {
   beginResetModel();
   _files.clear();
   endResetModel();

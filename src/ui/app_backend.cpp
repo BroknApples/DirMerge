@@ -14,7 +14,7 @@
 *************************************************************/
 
 AppBackend::AppBackend(QObject *parent) : QObject(parent) {
-  setPath(QDir::homePath());
+  setFilesystemPath(QDir::homePath());
 }
 
 /*************************************************************
@@ -35,20 +35,28 @@ Q_INVOKABLE void AppBackend::merge() {
 }
 
 
-void AppBackend::setPath(const QString &path) {
-  _current_path = path;
+void AppBackend::setFilesystemPath(const QString &path) {
+  // Update th epath in the filesystem model
+  _current_filesystem_path = path;
   emit currentPathChanged();
 
-  QDir dir(path);
-  QVector<FileItem> items;
+  // Update the Filesystem singleton's path
+  Filesystem::setCurrentDirectory(_current_filesystem_path.toStdString());
 
-  for (const QFileInfo &info : dir.entryInfoList(QDir::Dirs | QDir::Files | QDir::NoDotAndDotDot)) {
+  // Get files
+  std::vector<fs::path> files = Filesystem::getFilesInDirectory(path.toStdString());
+  QVector<FileItem> items;
+  items.reserve(files.size());
+  for (const fs::path &filePath : files) {
+    // Leverage your class's helper methods for icons and types
+    bool is_dir = Filesystem::isDirectory(filePath);
+    
     items.push_back({
-      info.fileName(),
-      info.isDir() ? "📁" : "📄",
-      info.isDir()
+      QString::fromStdString(filePath.filename().string()),
+      is_dir ? "📁" : "📄",
+      is_dir
     });
   }
 
-  _file_model.setFiles(items);
+  _filesystem_model.setFiles(items);
 }

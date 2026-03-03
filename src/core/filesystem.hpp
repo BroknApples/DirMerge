@@ -203,6 +203,14 @@ class Filesystem {
     static const int getTotalNumberOfFilesInDirectoryRecursive(const std::string& dir_path);
 
 
+    /**
+     * @brief Get the path to the parent directory of a path
+     * @param dir_path: Path to get the paren to.
+     * @returns fs::path: Path to the passed parameter's parent directory
+     */
+    static fs::path getParentDirectoryPath(fs::path dir_path);
+
+
     /***
      * @brief Checks if a given file exists in the filesystem.
      * @param path: Path to the file to check existence of.

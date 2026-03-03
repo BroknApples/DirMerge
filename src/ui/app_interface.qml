@@ -52,14 +52,30 @@ ApplicationWindow {
         }
 
         Row {
+          // Navigate Back Button
           spacing: 4
-          Button { text: "←"; flat: true; implicitWidth: 32 }
-          Button { text: "→"; flat: true; implicitWidth: 32 }
-          Button { text: "↑"; flat: true; implicitWidth: 32 }
-          // NEW: Reload Button
+          Button {
+            text: "←";
+            flat: true;
+            implicitWidth: 32
+          }
+          // Navigate Forward Button
+          Button {
+            text: "→";
+            flat: true;
+            implicitWidth: 32
+          }
+          // Go to Parent Directory Button
+          Button {
+            text: "↑";
+            flat: true;
+            implicitWidth: 32
+            onClicked: AppBackend.goToParentDirectory()
+          }
+          // Refresh Button
           Button { 
             text: "↻"
-            //onClicked: //TODO:
+            onClicked: AppBackend.refreshFileList()
           }
         }
 
@@ -130,7 +146,7 @@ ApplicationWindow {
         }
       }
 
-      // MAIN CONTENT
+      // [MAIN CONTENT]
       ColumnLayout {
         Layout.fillWidth: true
         Layout.fillHeight: true
@@ -143,9 +159,9 @@ ApplicationWindow {
           cellWidth: 150
           cellHeight: 150
           clip: true
-          model: AppBackend ? AppBackend.file_model : null
+          model: AppBackend ? AppBackend.filesystem_model : null
 
-          // [PLACE SCROLLBAR HERE]
+          // [SCROLLBAR]
           ScrollBar.vertical: ScrollBar {
             policy: ScrollBar.AsNeeded
             active: true 
@@ -156,32 +172,46 @@ ApplicationWindow {
             }
           }
 
-          // [PLACE INTERACTIVE DELEGATE HERE]
-          delegate: Item {
-            id: fileDelegate
-            width: 100; height: 100 // Example sizes
+          // [INTERACTIVE FILE BUTTONS HERE]
+          Flow {
+            anchors.fill: parent
+            spacing: 10
 
-            Rectangle {
-              anchors.fill: parent
-              color: mouseArea.containsMouse ? "#333" : "transparent" 
-              border.color: mouseArea.containsMouse ? "#444" : "transparent"
-              
-              Column {
-                anchors.centerIn: parent
-                Text { text: icon; font.pixelSize: 32; anchors.horizontalCenter: parent.horizontalCenter }
-                Text { text: filename; color: "white"; elide: Text.ElideRight; width: 80 }
-              }
+            Repeater {
+              model: AppBackend.filesystem_model // Matches your Q_PROPERTY name
 
-              MouseArea {
-                anchors.fill: parent
+              Button {
+                width: 100
+                height: 100
+                
+                // Customizing the button to show your icon and filename
+                contentItem: Column {
+                  spacing: 5
+                  Text { 
+                    text: model.icon // "📁" or "📄" from C++
+                    font.pixelSize: 32
+                    anchors.horizontalCenter: parent.horizontalCenter 
+                  }
+                  Text { 
+                    text: model.filename 
+                    color: "white"
+                    elide: Text.ElideRight
+                    width: 90
+                    horizontalAlignment: Text.AlignHCenter
+                  }
+                }
+
+                background: Rectangle {
+                  color: parent.down ? "#222" : (parent.hovered ? "#333" : "#1a1a1a")
+                  border.color: "#444"
+                  radius: 4
+                }
+
                 onClicked: {
-                  if (is_dir) {
-                    // Ensure we don't end up with "C://folder"
-                    let newPath = AppBackend.current_path
-                    if (!newPath.endsWith("/")) newPath += "/"
-                    AppBackend.setPath(newPath + filename)
+                  if (model.is_dir) {
+                    AppBackend.enterDirectory(model.filename)
                   } else {
-                    AppBackend.addFileToMerge(AppBackend.current_path + "/" + filename)
+                    AppBackend.addFileToMerge(model.filename)
                   }
                 }
               }
@@ -189,7 +219,8 @@ ApplicationWindow {
           }
         }
 
-        // PATH BAR
+
+        // [PATH BAR]
         Rectangle {
           Layout.fillWidth: true
           Layout.preferredHeight: 36
@@ -198,7 +229,7 @@ ApplicationWindow {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
             anchors.leftMargin: 12
-            text: AppBackend ? AppBackend.current_path : ""
+            text: AppBackend ? AppBackend.current_filesystem_path : ""
             color: "#777"
             font.family: "Monospace"
           }

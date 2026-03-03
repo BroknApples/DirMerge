@@ -352,6 +352,12 @@ const int Filesystem::getTotalNumberOfFilesInDirectoryRecursive(const std::strin
 }
 
 
+fs::path Filesystem::getParentDirectoryPath(fs::path dir_path) {
+  return dir_path.parent_path();
+}
+
+
+
 bool Filesystem::exists(fs::path path) {
   // Get path from relative/absolute
   path = _getRelativeOrAbsolutePath(path);
