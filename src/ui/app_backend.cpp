@@ -47,12 +47,13 @@ void AppBackend::setFilesystemPath(const QString &path) {
   std::vector<fs::path> files = Filesystem::getFilesInDirectory(path.toStdString());
   QVector<FileItem> items;
   items.reserve(files.size());
-  for (const fs::path &filePath : files) {
+  for (const fs::path &path : files) {
     // Leverage your class's helper methods for icons and types
-    bool is_dir = Filesystem::isDirectory(filePath);
+    bool is_dir = Filesystem::isDirectory(path);
     
     items.push_back({
-      QString::fromStdString(filePath.filename().string()),
+      QString::fromStdString(path.filename().string()),
+      QString::fromStdString(path.string()),
       is_dir ? "📁" : "📄",
       is_dir
     });

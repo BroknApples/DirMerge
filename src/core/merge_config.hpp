@@ -99,6 +99,15 @@ class MergeConfig {
      */
     bool existsInMergeList(const std::vector<fs::path>& files);
 
+    /**
+     * @brief Gets the index of an item if it exists in the merge list
+     *        NOTE: Will NOT check the contents directories included in the merge list.
+     * @param file: File to check.
+     * @returns int: Index of item
+     */
+    int getIndexInMergeList(const fs::path& file);
+
+
 
     /**
      * @brief Gets the entire merge list

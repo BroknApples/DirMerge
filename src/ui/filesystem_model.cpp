@@ -16,6 +16,7 @@ QVariant FilesystemModel::data(const QModelIndex &index, int role) const {
   const FileItem &item = _files[index.row()];
   switch (role) {
     case FileNameRole: return item.filename;
+    case FullPathRole: return item.full_path;
     case IconRole:     return item.icon;
     case IsDirRole:    return item.is_dir;
   }
@@ -25,11 +26,12 @@ QVariant FilesystemModel::data(const QModelIndex &index, int role) const {
 
 
 QHash<int, QByteArray> FilesystemModel::roleNames() const {
-  return {
-    { FileNameRole, "filename" },
-    { IconRole,     "icon" },
-    { IsDirRole,    "is_dir" }
-  };
+  QHash<int, QByteArray> roles;
+  roles[FileNameRole] = "filename";
+  roles[FullPathRole] = "full_path";
+  roles[IconRole] = "icon";
+  roles[IsDirRole] = "is_dir";
+  return roles;
 }
 
 

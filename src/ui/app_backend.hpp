@@ -67,6 +67,7 @@ class AppBackend : public QObject {
       std::string current = _current_filesystem_path.toStdString();
       std::string fullPath = (fs::path(current)/filename.toStdString()).string();
       _active_merge_config.addFileToMergeList(fullPath);
+      emit mergeListChanged();
     }
 
 
@@ -134,6 +135,20 @@ class AppBackend : public QObject {
       setFilesystemPath(_current_filesystem_path);
     }
 
+    /**
+     * @brief Returns 1-based index, or 0 if not in the list
+     * @param filename: Name of the file to check
+     */
+    Q_INVOKABLE int getFileOrder(QString filename) {
+      std::string searchStr = filename.toStdString();
+      const int idx = _active_merge_config.getIndexInMergeList(searchStr);
+      
+      // This will tell us if the paths look different (e.g., missing slashes or extensions)
+      println("Checking: " + searchStr + " | Found at: " + std::to_string(idx));
+      
+      return (idx != -1) ? (idx + 1) : 0;
+    }
+
 
     /**
      * @brief Sets the path for the filesystem (this is the current path shown in the path bar)
@@ -144,6 +159,7 @@ class AppBackend : public QObject {
 
   signals:
     void currentPathChanged();
+    void mergeListChanged();
 };
 
 

@@ -46,7 +46,7 @@ bool MergeConfig::addFileToMergeList(const fs::path& file) {
     _merge_list[lowest_free_index] = file;
 
     // Log data & return
-    println("Added '", file, "' to the merge list at index [", lowest_free_index, "].");
+    println("Added ", file, " to the merge list at index [", lowest_free_index, "].");
     return true;
   }
 
@@ -120,11 +120,7 @@ void MergeConfig::clearMergeList() {
 
 
 bool MergeConfig::existsInMergeList(const fs::path& file) {
-  if (std::find(_merge_list.begin(), _merge_list.end(), file) == _merge_list.end()) {
-    return false;
-  }
-  
-  return true;
+  return std::find(_merge_list.begin(), _merge_list.end(), file) != _merge_list.end();
 }
 
 
@@ -136,6 +132,18 @@ bool MergeConfig::existsInMergeList(const std::vector<fs::path>& files) {
   }
 
   return true;
+}
+
+
+int MergeConfig::getIndexInMergeList(const fs::path& file) {
+  auto it = std::find(_merge_list.begin(), _merge_list.end(), file);
+  
+  if (it != _merge_list.end()) {
+    return std::distance(_merge_list.begin(), it);
+  }
+
+  // Doesn't exist in the list
+  return -1;
 }
 
 

@@ -11,6 +11,7 @@
  */
 struct FileItem {
   QString filename;
+  QString full_path;
   QString icon;
   bool is_dir;
 };
@@ -30,6 +31,7 @@ class FilesystemModel : public QAbstractListModel {
   public:
     enum Roles {
       FileNameRole = Qt::UserRole + 1,
+      FullPathRole,
       IconRole,
       IsDirRole
     };

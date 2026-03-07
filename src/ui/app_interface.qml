@@ -44,42 +44,46 @@ ApplicationWindow {
         anchors.rightMargin: 12
         spacing: 10
         
-        // NEW: App Icon
+        // [App Icon]
         Text {
           text: "📦"
           font.pixelSize: 20
           Layout.rightMargin: 4
-        }
+        } // [END App Icon]
 
         Row {
-          // Navigate Back Button
+          // [Navigate Back Button]
           spacing: 4
           Button {
             text: "←";
             flat: true;
             implicitWidth: 32
-          }
+          } // [END Navigate Back Button]
+
           // Navigate Forward Button
           Button {
             text: "→";
             flat: true;
             implicitWidth: 32
-          }
-          // Go to Parent Directory Button
+          } // [END Navigate Forward Button]
+
+          // [Navigate Up Button]
           Button {
             text: "↑";
             flat: true;
             implicitWidth: 32
             onClicked: AppBackend.goToParentDirectory()
-          }
-          // Refresh Button
+          } // [END Navigate Up Button]
+
+          // [Refresh Button]
           Button { 
             text: "↻"
             onClicked: AppBackend.refreshFileList()
-          }
+          } // [END Refresh Button]
         }
 
-        TextField {
+        // [Search Bar]
+        TextField { 
           Layout.fillWidth: true
           placeholderText: "Search"
           color: "white"
@@ -87,15 +91,18 @@ ApplicationWindow {
             radius: 4
             color: "#2a2a2a"
           }
-        }
+        } // [END Search Bar]
 
         Row {
           spacing: 0 // Tighter spacing for window controls
+
+          // [Minimize Button]
           Button { 
             text: "—"; flat: true
             onClicked: window.showMinimized() 
-          }
-          // NEW: Maximize/Restore Button
+          } // [END Minimize Button]
+
+          // [Maximize/Restore Button]
           Button {
             text: window.visibility === Window.Maximized ? "❐" : "⬜"
             flat: true
@@ -103,11 +110,13 @@ ApplicationWindow {
               if (window.visibility === Window.Maximized) window.showNormal()
               else window.showMaximized()
             }
-          }
+          } // [END Maximize/Restore Button]
+
+          // [Close Button]
           Button { 
             text: "✕"; flat: true
             onClicked: Qt.quit() 
-          }
+          } // [END Close Button]
         }
       }
     }
@@ -120,7 +129,7 @@ ApplicationWindow {
       Layout.fillHeight: true
       spacing: 0
 
-      // LEFT SIDEBAR
+      // [LEFT SIDEBAR]
       Rectangle {
         Layout.preferredWidth: 56
         Layout.fillHeight: true
@@ -144,7 +153,7 @@ ApplicationWindow {
 
           ToolButton { Layout.alignment: Qt.AlignHCenter; text: "⚙" }
         }
-      }
+      } // [END LEFT SIDEBAR]
 
       // [MAIN CONTENT]
       ColumnLayout {
@@ -170,7 +179,7 @@ ApplicationWindow {
               radius: 3
               color: "#444"
             }
-          }
+          } // [END SCROLLBAR]
 
           // [INTERACTIVE FILE BUTTONS HERE]
           Flow {
@@ -181,17 +190,19 @@ ApplicationWindow {
               model: AppBackend.filesystem_model // Matches your Q_PROPERTY name
 
               Button {
+                id: file_button
                 width: 100
                 height: 100
                 
-                // Customizing the button to show your icon and filename
+                // Replace button texture with an icon -- TODO: Implement previews.
                 contentItem: Column {
                   spacing: 5
                   Text { 
-                    text: model.icon // "📁" or "📄" from C++
+                    text: model.icon // "📁" or "📄"
                     font.pixelSize: 32
                     anchors.horizontalCenter: parent.horizontalCenter 
                   }
+
                   Text { 
                     text: model.filename 
                     color: "white"
@@ -207,16 +218,89 @@ ApplicationWindow {
                   radius: 4
                 }
 
+                // [ADD TO MERGE BUTTON / ORDER BADGE]
+                Item {
+                  id: selection_overlay
+
+                  // --- COORDINATES ---
+                  // Top Right:     x: 70,  y: 4
+                  // Bottom Right:  x: 70,  y: 70
+                  // Top Left:      x: 4,   y: 4
+                  // Bottom Left:   x: 4,   y: 70
+                  x: 70
+                  y: 4
+                  width: 26
+                  height: 26
+                  
+                  // Get the order from C++ and use a property to make it reactive
+                  property int order: AppBackend.getFileOrder(model.full_path)
+                  property bool is_added: order > 0
+
+                  // Signal connections
+                  Connections {
+                    target: AppBackend
+                    function onMergeListChanged() {
+                      selection_overlay.order = AppBackend.getFileOrder(model.full_path)
+                    }
+                  }
+
+                  visible: file_button.hovered || is_added
+
+                  // THE ADD BUTTON (Only shows if not added yet)
+                  Button {
+                    anchors.fill: parent
+                    visible: !selection_overlay.is_added
+                    text: "+"
+                    
+                    background: Rectangle {
+                      color: parent.hovered ? "#444" : "#333"
+                      radius: 13
+                      border.color: "white"
+                    }
+
+                    onClicked: {
+                      AppBackend.addFileToMerge(model.full_path)
+                      // Refresh the order property
+                      selection_overlay.order = AppBackend.getFileOrder(model.full_path)
+                    }
+                  }
+
+                  // THE NUMBER BADGE (Only shows if added)
+                  Rectangle {
+                    anchors.fill: parent
+                    visible: selection_overlay.is_added
+                    color: "#0078d4" // Nice blue for the selection order
+                    radius: 13
+                    border.color: "white"
+                    border.width: 1
+
+                    Text {
+                      anchors.centerIn: parent
+                      text: selection_overlay.order
+                      color: "white"
+                      font.bold: true
+                      font.pixelSize: 12
+                    }
+
+                    // Optional: Click the number to remove/deselect
+                    MouseArea {
+                      anchors.fill: parent
+                      onClicked: {
+                        AppBackend.removeFileFromMerge(model.full_path)
+                        selection_overlay.order = AppBackend.getFileOrder(model.full_path)
+                      }
+                    }
+                  }
+                } // [END ADD TO MERGE BUTTON / ORDER BADGE]
+
                 onClicked: {
                   if (model.is_dir) {
-                    AppBackend.enterDirectory(model.filename)
-                  } else {
-                    AppBackend.addFileToMerge(model.filename)
+                    AppBackend.enterDirectory(model.full_path)
                   }
                 }
               }
             }
-          }
+          } // [END FILE BUTTONS]
         }
 
 
@@ -233,8 +317,8 @@ ApplicationWindow {
             color: "#777"
             font.family: "Monospace"
           }
-        }
-      }
+        } // [END PATH BAR]
+      } // [END MAIN CONTENT]
     }
 
     // ======================
