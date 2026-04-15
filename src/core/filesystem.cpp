@@ -279,7 +279,36 @@ const std::vector<fs::path> Filesystem::getFilesInDirectory(const std::string& d
   if (!isDirectory(DIR_PATH)) return {};
 
   // Return all paths in the directory
-  return std::vector<fs::path>(fs::directory_iterator(DIR_PATH), {});
+  std::vector<fs::path> paths;
+  try {
+    // Use skip_permission_denied to prevent crashing on system folders
+    auto iter = fs::directory_iterator(
+      DIR_PATH, 
+      fs::directory_options::skip_permission_denied
+    );
+
+    for (const auto& entry : iter) {
+      // Check if the entry is a directory we can actually enter
+      if (entry.is_directory()) {
+        try {
+          // Attempt to open the sub-directory briefly to check access
+          fs::directory_iterator sub_iter(entry.path(), fs::directory_options::skip_permission_denied);
+          paths.push_back(entry.path());
+        } catch (const fs::filesystem_error&) {
+          // If we can't open it, we don't add it to the 'paths' vector
+          println("Skipping restricted folder: " + entry.path().u8string());
+          continue; 
+        }
+      } else {
+        paths.push_back(entry.path());
+      }
+    }
+  } catch (const fs::filesystem_error& e) {
+    // Log the error and return what we have (or an empty vector)
+    println("Access Denied or Error: " + std::string(e.what()));
+  }
+
+  return paths;
 }
 
 
@@ -306,7 +335,49 @@ const std::vector<fs::path> Filesystem::getFilesInDirectoryRecursive(const std::
   if (!isDirectory(DIR_PATH)) return {};
 
   // Return all paths in the directory
-  return std::vector<fs::path>(fs::recursive_directory_iterator(DIR_PATH), {});
+  std::vector<fs::path> paths;
+  try {
+    // skip_permission_denied is critical for recursive calls to avoid crashing on subfolders
+    auto iter = fs::recursive_directory_iterator(
+      DIR_PATH, 
+      fs::directory_options::skip_permission_denied
+    );
+
+    for (auto it = fs::begin(iter); it != fs::end(iter); ) {
+      try {
+        const fs::directory_entry& entry = *it;
+        
+        if (entry.is_directory()) {
+          try {
+            // "Peek" check: attempt to open the folder briefly
+            fs::directory_iterator test_open(entry.path(), fs::directory_options::skip_permission_denied);
+            
+            // If successful, add the folder and allow recursion
+            paths.push_back(entry.path());
+            ++it;
+          } catch (const fs::filesystem_error&) {
+            // If access is denied, skip this folder and don't go deeper
+            println("Skipping restricted folder: " + entry.path().u8string());
+            it.disable_recursion_pending();
+            ++it; 
+          }
+        } else {
+          // Normal file, just add it
+          paths.push_back(entry.path());
+          ++it;
+        }
+      } catch (const fs::filesystem_error& e) {
+        // Catch any errors that happen during the iteration step itself
+        println("Recursion Step Error: " + std::string(e.what()));
+        it.disable_recursion_pending();
+        ++it; 
+      }
+    }
+  } catch (const fs::filesystem_error& e) {
+    println("Recursive Access Denied or Error: " + std::string(e.what()));
+  }
+
+  return paths;
 }
 
 

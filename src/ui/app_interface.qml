@@ -13,11 +13,119 @@ ApplicationWindow {
 
   // --- State & Data ---
   property string viewMode: "grid"
+  property int iconSize: 64
 
 
-  // [PLACE FUNCTIONS HERE]
+  // --- Components ---
+
+  // [GRID VIEW COMPONENT]
+  Component {
+    id: gridViewComponent
+    GridView {
+      id: fileGrid
+      anchors.fill: parent
+      model: AppBackend ? AppBackend.filesystem_model : null
+      cellWidth: iconSize + 40
+      cellHeight: iconSize + 60
+      clip: true
+      delegate: fileDelegateGrid
+    }
+  } // [END GRID VIEW COMPONENT]
+
+  // [LIST VIEW COMPONENT]
+  Component {
+    id: listViewComponent
+    ListView {
+      id: fileList
+      anchors.fill: parent
+      model: AppBackend ? AppBackend.filesystem_model : null
+      clip: true
+      delegate: fileDelegateList
+    }
+  } // [END LIST VIEW COMPONENT]
+
+  // [GRID DELEGATE COMPONENT]
+  Component {
+    id: fileDelegateGrid
+    Item {
+      width: GridView.view.cellWidth
+      height: GridView.view.cellHeight
+
+      Button {
+        anchors.centerIn: parent
+        width: parent.width - 10
+        height: parent.height - 10
+        flat: true
+
+        contentItem: ColumnLayout {
+          spacing: 5
+          Text {
+            text: icon
+            font.pixelSize: iconSize * 0.8
+            Layout.alignment: Qt.AlignHCenter
+          }
+          Text {
+            text: filename
+            color: "white"
+            elide: Text.ElideRight
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+          }
+        }
+
+        background: Rectangle {
+          color: parent.hovered ? "#333" : "transparent"
+          radius: 6
+        }
+
+        onClicked: {
+          if (is_dir) AppBackend.enterSubdirectory(full_path)
+        }
+      }
+    }
+  } // [END GRID DELEGATE COMPONENT]
+
+  // [LIST DELEGATE COMPONENT]
+  Component {
+    id: fileDelegateList
+    Rectangle {
+      width: ListView.view.width
+      height: 40
+      color: mouseAreaList.containsMouse ? "#333" : "transparent"
+
+      RowLayout {
+        anchors.fill: parent
+        anchors.leftMargin: 10
+        spacing: 15
+
+        Text { text: icon; font.pixelSize: 20 }
+        Text {
+          text: filename
+          color: "white"
+          Layout.preferredWidth: 200
+          elide: Text.ElideRight
+        }
+        Text {
+          text: full_path
+          color: "#777"
+          Layout.fillWidth: true
+          elide: Text.ElideLeft
+        }
+      }
+
+      MouseArea {
+        id: mouseAreaList
+        anchors.fill: parent
+        hoverEnabled: true
+        onClicked: {
+          if (is_dir) AppBackend.enterSubdirectory(full_path)
+        }
+      }
+    }
+  } // [END LIST DELEGATE COMPONENT]
 
 
+  // --- Actual UI Content ---
   ColumnLayout {
     anchors.fill: parent
     spacing: 0
@@ -58,6 +166,7 @@ ApplicationWindow {
             text: "←";
             flat: true;
             implicitWidth: 32
+            onClicked: AppBackend.goBack()
           } // [END Navigate Back Button]
 
           // Navigate Forward Button
@@ -65,6 +174,7 @@ ApplicationWindow {
             text: "→";
             flat: true;
             implicitWidth: 32
+            onClicked: AppBackend.goForward()
           } // [END Navigate Forward Button]
 
           // [Navigate Up Button]
@@ -155,170 +265,17 @@ ApplicationWindow {
         }
       } // [END LEFT SIDEBAR]
 
+
       // [MAIN CONTENT]
-      ColumnLayout {
+      Item {
         Layout.fillWidth: true
         Layout.fillHeight: true
-        spacing: 0
 
-        GridView {
-          id: fileGrid
-          Layout.fillWidth: true
-          Layout.fillHeight: true
-          cellWidth: 150
-          cellHeight: 150
-          clip: true
-          model: AppBackend ? AppBackend.filesystem_model : null
-
-          // [SCROLLBAR]
-          ScrollBar.vertical: ScrollBar {
-            policy: ScrollBar.AsNeeded
-            active: true 
-            contentItem: Rectangle {
-              implicitWidth: 6
-              radius: 3
-              color: "#444"
-            }
-          } // [END SCROLLBAR]
-
-          // [INTERACTIVE FILE BUTTONS HERE]
-          Flow {
-            anchors.fill: parent
-            spacing: 10
-
-            Repeater {
-              model: AppBackend.filesystem_model // Matches your Q_PROPERTY name
-
-              Button {
-                id: file_button
-                width: 100
-                height: 100
-                
-                // Replace button texture with an icon -- TODO: Implement previews.
-                contentItem: Column {
-                  spacing: 5
-                  Text { 
-                    text: model.icon // "📁" or "📄"
-                    font.pixelSize: 32
-                    anchors.horizontalCenter: parent.horizontalCenter 
-                  }
-
-                  Text { 
-                    text: model.filename 
-                    color: "white"
-                    elide: Text.ElideRight
-                    width: 90
-                    horizontalAlignment: Text.AlignHCenter
-                  }
-                }
-
-                background: Rectangle {
-                  color: parent.down ? "#222" : (parent.hovered ? "#333" : "#1a1a1a")
-                  border.color: "#444"
-                  radius: 4
-                }
-
-                // [ADD TO MERGE BUTTON / ORDER BADGE]
-                Item {
-                  id: selection_overlay
-
-                  // --- COORDINATES ---
-                  // Top Right:     x: 70,  y: 4
-                  // Bottom Right:  x: 70,  y: 70
-                  // Top Left:      x: 4,   y: 4
-                  // Bottom Left:   x: 4,   y: 70
-                  x: 70
-                  y: 4
-                  width: 26
-                  height: 26
-                  
-                  // Get the order from C++ and use a property to make it reactive
-                  property int order: AppBackend.getFileOrder(model.full_path)
-                  property bool is_added: order > 0
-
-                  // Signal connections
-                  Connections {
-                    target: AppBackend
-                    function onMergeListChanged() {
-                      selection_overlay.order = AppBackend.getFileOrder(model.full_path)
-                    }
-                  }
-
-                  visible: file_button.hovered || is_added
-
-                  // THE ADD BUTTON (Only shows if not added yet)
-                  Button {
-                    anchors.fill: parent
-                    visible: !selection_overlay.is_added
-                    text: "+"
-                    
-                    background: Rectangle {
-                      color: parent.hovered ? "#444" : "#333"
-                      radius: 13
-                      border.color: "white"
-                    }
-
-                    onClicked: {
-                      AppBackend.addFileToMerge(model.full_path)
-                      // Refresh the order property
-                      selection_overlay.order = AppBackend.getFileOrder(model.full_path)
-                    }
-                  }
-
-                  // THE NUMBER BADGE (Only shows if added)
-                  Rectangle {
-                    anchors.fill: parent
-                    visible: selection_overlay.is_added
-                    color: "#0078d4" // Nice blue for the selection order
-                    radius: 13
-                    border.color: "white"
-                    border.width: 1
-
-                    Text {
-                      anchors.centerIn: parent
-                      text: selection_overlay.order
-                      color: "white"
-                      font.bold: true
-                      font.pixelSize: 12
-                    }
-
-                    // Optional: Click the number to remove/deselect
-                    MouseArea {
-                      anchors.fill: parent
-                      onClicked: {
-                        AppBackend.removeFileFromMerge(model.full_path)
-                        selection_overlay.order = AppBackend.getFileOrder(model.full_path)
-                      }
-                    }
-                  }
-                } // [END ADD TO MERGE BUTTON / ORDER BADGE]
-
-                onClicked: {
-                  if (model.is_dir) {
-                    AppBackend.enterDirectory(model.full_path)
-                  }
-                }
-              }
-            }
-          } // [END FILE BUTTONS]
+        Loader {
+          anchors.fill: parent
+          sourceComponent: viewMode === "grid" ? gridViewComponent : listViewComponent
         }
-
-
-        // [PATH BAR]
-        Rectangle {
-          Layout.fillWidth: true
-          Layout.preferredHeight: 36
-          color: "#181818"
-          Text {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: parent.left
-            anchors.leftMargin: 12
-            text: AppBackend ? AppBackend.current_filesystem_path : ""
-            color: "#777"
-            font.family: "Monospace"
-          }
-        } // [END PATH BAR]
-      } // [END MAIN CONTENT]
+      }
     }
 
     // ======================
