@@ -1,171 +1,129 @@
 
-//   ColumnLayout {
-    //     Layout.fillWidth: true
-    //     Layout.fillHeight: true
-    //     spacing: 0
 
-    //     GridView {
-    //       id: fileGrid
-    //       Layout.fillWidth: true
-    //       Layout.fillHeight: true
-    //       cellWidth: 150
-    //       cellHeight: 150
-    //       clip: true
-    //       model: AppBackend ? AppBackend.filesystem_model : null
+    // [INTERACTIVE FILE BUTTONS]
+    delegate: Item {
+    width: 120
+    height: 120
 
-    //       // [SCROLLBAR]
-    //       ScrollBar.vertical: ScrollBar {
-    //         policy: ScrollBar.AsNeeded
-    //         active: true 
-    //         contentItem: Rectangle {
-    //           implicitWidth: 6
-    //           radius: 3
-    //           color: "#444"
-    //         }
-    //       } // [END SCROLLBAR]
+    Rectangle {
+        anchors.fill: parent
+        anchors.margins: 6
+        radius: 6
+        color: "#1a1a1a"
 
-    //       // [INTERACTIVE FILE BUTTONS]
-    //       delegate: Item {
-    //         width: 120
-    //         height: 120
+        Button {
+        
+        }
+    }
 
-    //         Rectangle {
-    //           anchors.fill: parent
-    //           anchors.margins: 6
-    //           radius: 6
-    //           color: "#1a1a1a"
+    
+    id: file_button
+    width: 100
+    height: 100
+    
+    // Replace button texture with an icon -- TODO: Implement previews.
+    contentItem: Column {
+        spacing: 5
+        Text { 
+        text: icon // "📁" or "📄"
+        font.pixelSize: 32
+        anchors.horizontalCenter: parent.horizontalCenter 
+        }
 
-    //           Button {
-                
-    //           }
-    //         }
+        Text { 
+        text: filename 
+        color: "white"
+        elide: Text.ElideRight
+        width: 90
+        horizontalAlignment: Text.AlignHCenter
+        }
+    }
 
-            
-    //         id: file_button
-    //         width: 100
-    //         height: 100
-            
-    //         // Replace button texture with an icon -- TODO: Implement previews.
-    //         contentItem: Column {
-    //           spacing: 5
-    //           Text { 
-    //             text: icon // "📁" or "📄"
-    //             font.pixelSize: 32
-    //             anchors.horizontalCenter: parent.horizontalCenter 
-    //           }
+    background: Rectangle {
+        color: parent.down ? "#222" : (parent.hovered ? "#333" : "#1a1a1a")
+        border.color: "#444"
+        radius: 4
+    }
 
-    //           Text { 
-    //             text: filename 
-    //             color: "white"
-    //             elide: Text.ElideRight
-    //             width: 90
-    //             horizontalAlignment: Text.AlignHCenter
-    //           }
-    //         }
+    // [ADD TO MERGE BUTTON / ORDER BADGE]
+    Item {
+        id: selection_overlay
 
-    //         background: Rectangle {
-    //           color: parent.down ? "#222" : (parent.hovered ? "#333" : "#1a1a1a")
-    //           border.color: "#444"
-    //           radius: 4
-    //         }
+        // --- COORDINATES ---
+        // Top Right:     x: 70,  y: 4
+        // Bottom Right:  x: 70,  y: 70
+        // Top Left:      x: 4,   y: 4
+        // Bottom Left:   x: 4,   y: 70
+        x: 70
+        y: 4
+        width: 26
+        height: 26
+        
+        // Get the order from C++ and use a property to make it reactive
+        property int order: AppBackend.getFileOrder(full_path)
+        property bool is_added: order > 0
 
-    //         // [ADD TO MERGE BUTTON / ORDER BADGE]
-    //         Item {
-    //           id: selection_overlay
+        // Signal connections
+        Connections {
+        target: AppBackend
+        function onMergeListChanged() {
+            selection_overlay.order = AppBackend.getFileOrder(full_path)
+        }
+        }
 
-    //           // --- COORDINATES ---
-    //           // Top Right:     x: 70,  y: 4
-    //           // Bottom Right:  x: 70,  y: 70
-    //           // Top Left:      x: 4,   y: 4
-    //           // Bottom Left:   x: 4,   y: 70
-    //           x: 70
-    //           y: 4
-    //           width: 26
-    //           height: 26
-              
-    //           // Get the order from C++ and use a property to make it reactive
-    //           property int order: AppBackend.getFileOrder(full_path)
-    //           property bool is_added: order > 0
+        visible: file_button.hovered || is_added
 
-    //           // Signal connections
-    //           Connections {
-    //             target: AppBackend
-    //             function onMergeListChanged() {
-    //               selection_overlay.order = AppBackend.getFileOrder(full_path)
-    //             }
-    //           }
+        // THE ADD BUTTON (Only shows if not added yet)
+        Button {
+        anchors.fill: parent
+        visible: !selection_overlay.is_added
+        text: "+"
+        
+        background: Rectangle {
+            color: parent.hovered ? "#444" : "#333"
+            radius: 13
+            border.color: "white"
+        }
 
-    //           visible: file_button.hovered || is_added
+        onClicked: {
+            AppBackend.addFileToMerge(full_path)
+            // Refresh the order property
+            selection_overlay.order = AppBackend.getFileOrder(full_path)
+        }
+        }
 
-    //           // THE ADD BUTTON (Only shows if not added yet)
-    //           Button {
-    //             anchors.fill: parent
-    //             visible: !selection_overlay.is_added
-    //             text: "+"
-                
-    //             background: Rectangle {
-    //               color: parent.hovered ? "#444" : "#333"
-    //               radius: 13
-    //               border.color: "white"
-    //             }
+        // THE NUMBER BADGE (Only shows if added)
+        Rectangle {
+        anchors.fill: parent
+        visible: selection_overlay.is_added
+        color: "#0078d4" // Nice blue for the selection order
+        radius: 13
+        border.color: "white"
+        border.width: 1
 
-    //             onClicked: {
-    //               AppBackend.addFileToMerge(full_path)
-    //               // Refresh the order property
-    //               selection_overlay.order = AppBackend.getFileOrder(full_path)
-    //             }
-    //           }
+        Text {
+            anchors.centerIn: parent
+            text: selection_overlay.order
+            color: "white"
+            font.bold: true
+            font.pixelSize: 12
+        }
 
-    //           // THE NUMBER BADGE (Only shows if added)
-    //           Rectangle {
-    //             anchors.fill: parent
-    //             visible: selection_overlay.is_added
-    //             color: "#0078d4" // Nice blue for the selection order
-    //             radius: 13
-    //             border.color: "white"
-    //             border.width: 1
+        // Optional: Click the number to remove/deselect
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+            AppBackend.removeFileFromMerge(full_path)
+            selection_overlay.order = AppBackend.getFileOrder(full_path)
+            }
+        }
+        }
+    } // [END ADD TO MERGE BUTTON / ORDER BADGE]
 
-    //             Text {
-    //               anchors.centerIn: parent
-    //               text: selection_overlay.order
-    //               color: "white"
-    //               font.bold: true
-    //               font.pixelSize: 12
-    //             }
-
-    //             // Optional: Click the number to remove/deselect
-    //             MouseArea {
-    //               anchors.fill: parent
-    //               onClicked: {
-    //                 AppBackend.removeFileFromMerge(full_path)
-    //                 selection_overlay.order = AppBackend.getFileOrder(full_path)
-    //               }
-    //             }
-    //           }
-    //         } // [END ADD TO MERGE BUTTON / ORDER BADGE]
-
-    //         onClicked: {
-    //           if (is_dir) {
-    //             AppBackend.enterSubdirectory(full_path)
-    //           }
-    //         }
-    //       } // [END FILE BUTTONS]
-    //     }
-
-
-    //     // [PATH BAR]
-    //     Rectangle {
-    //       Layout.fillWidth: true
-    //       Layout.preferredHeight: 36
-    //       color: "#181818"
-    //       Text {
-    //         anchors.verticalCenter: parent.verticalCenter
-    //         anchors.left: parent.left
-    //         anchors.leftMargin: 12
-    //         text: AppBackend ? AppBackend.current_filesystem_path : ""
-    //         color: "#777"
-    //         font.family: "Monospace"
-    //       }
-    //     } // [END PATH BAR]
-    //   } // [END MAIN CONTENT]
-    // } // [END MIDDLE AREA]
+    onClicked: {
+        if (is_dir) {
+        AppBackend.enterSubdirectory(full_path)
+        }
+    }
+    } // [END FILE BUTTONS]
+}

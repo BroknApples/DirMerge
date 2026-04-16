@@ -11,7 +11,9 @@ ApplicationWindow {
   color: "#121212"
   flags: Qt.FramelessWindowHint | Qt.Window
 
+
   // --- State & Data ---
+
   property string viewMode: "grid"
   property int iconSize: 64
 
@@ -44,6 +46,7 @@ ApplicationWindow {
     }
   } // [END LIST VIEW COMPONENT]
 
+
   // [GRID DELEGATE COMPONENT]
   Component {
     id: fileDelegateGrid
@@ -52,6 +55,7 @@ ApplicationWindow {
       height: GridView.view.cellHeight
 
       Button {
+        id: file_button
         anchors.centerIn: parent
         width: parent.width - 10
         height: parent.height - 10
@@ -82,21 +86,149 @@ ApplicationWindow {
           if (is_dir) AppBackend.enterSubdirectory(full_path)
         }
       }
+
+      // [SELECTION OVERLAY]
+      Item {
+        id: selection_overlay
+        x: 70
+        y: 4
+        width: 26
+        height: 26
+        
+        property int order: AppBackend.getFileOrder(full_path)
+        property bool is_added: order > 0
+
+        Connections {
+          target: AppBackend
+          function onMergeListChanged() {
+            selection_overlay.order = AppBackend.getFileOrder(full_path)
+          }
+        }
+
+        visible: file_button.hovered || selection_overlay_button.hovered || is_added
+
+        Button {
+          id: selection_overlay_button
+          anchors.fill: parent
+          visible: !selection_overlay.is_added
+          text: "+"
+          background: Rectangle {
+            color: parent.hovered ? "#444" : "#333"
+            radius: 13
+            border.color: "white"
+          }
+          onClicked: {
+            AppBackend.addFileToMerge(full_path)
+            selection_overlay.order = AppBackend.getFileOrder(full_path)
+          }
+        }
+
+        Rectangle {
+          anchors.fill: parent
+          visible: selection_overlay.is_added
+          color: "#0078d4"
+          radius: 13
+          border.color: "white"
+          border.width: 1
+
+          Text {
+            anchors.centerIn: parent
+            text: selection_overlay.order
+            color: "white"
+            font.bold: true
+            font.pixelSize: 12
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            onClicked: {
+              AppBackend.removeFileFromMerge(full_path)
+              selection_overlay.order = AppBackend.getFileOrder(full_path)
+            }
+          }
+        } // [END SELECTION OVERLAY]
+      }
     }
   } // [END GRID DELEGATE COMPONENT]
+
 
   // [LIST DELEGATE COMPONENT]
   Component {
     id: fileDelegateList
     Rectangle {
+      id: list_delegate_root
       width: ListView.view.width
       height: 40
       color: mouseAreaList.containsMouse ? "#333" : "transparent"
+
+      // Move the main MouseArea to the TOP of the file so it's at the bottom of the stack
+      MouseArea {
+        id: mouseAreaList
+        anchors.fill: parent
+        hoverEnabled: true
+        onClicked: {
+          if (is_dir) AppBackend.enterSubdirectory(full_path)
+        }
+      }
 
       RowLayout {
         anchors.fill: parent
         anchors.leftMargin: 10
         spacing: 15
+
+        // [SELECTION OVERLAY]
+        Item {
+          id: list_selection_wrapper
+          width: 24
+          height: 24
+          Layout.alignment: Qt.AlignVCenter
+          z: 10 // Ensure this stays above the main MouseArea
+          
+          property int order: AppBackend.getFileOrder(full_path)
+          property bool is_added: order > 0
+          
+          Connections {
+            target: AppBackend
+            function onMergeListChanged() {
+              list_selection_wrapper.order = AppBackend.getFileOrder(full_path)
+            }
+          }
+
+          // Badge for list mode
+          Rectangle {
+            anchors.fill: parent
+            visible: parent.is_added
+            color: "#0078d4"
+            radius: 12
+            Text {
+              anchors.centerIn: parent
+              text: parent.parent.order
+              color: "white"
+              font.pixelSize: 10
+              font.bold: true
+            }
+          }
+          
+          // Plus button for list mode
+          Text {
+            anchors.centerIn: parent
+            text: "+"
+            color: "white"
+            font.pixelSize: 18
+            // Only show plus if NOT added AND we are hovering the row
+            visible: !parent.is_added && mouseAreaList.containsMouse
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            onClicked: {
+              if (parent.is_added) AppBackend.removeFileFromMerge(full_path)
+              else AppBackend.addFileToMerge(full_path)
+              // Update order immediately for UI feedback
+              parent.order = AppBackend.getFileOrder(full_path)
+            }
+          }
+        } // [END SELECTION OVERLAY]
 
         Text { text: icon; font.pixelSize: 20 }
         Text {
@@ -112,20 +244,24 @@ ApplicationWindow {
           elide: Text.ElideLeft
         }
       }
-
-      MouseArea {
-        id: mouseAreaList
-        anchors.fill: parent
-        hoverEnabled: true
-        onClicked: {
-          if (is_dir) AppBackend.enterSubdirectory(full_path)
-        }
-      }
     }
   } // [END LIST DELEGATE COMPONENT]
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   // --- Actual UI Content ---
+
   ColumnLayout {
     anchors.fill: parent
     spacing: 0
@@ -267,14 +403,32 @@ ApplicationWindow {
 
 
       // [MAIN CONTENT]
-      Item {
-        Layout.fillWidth: true
-        Layout.fillHeight: true
+      ColumnLayout {
+        // [FILE EXPLORER]
+        Item {
+          Layout.fillWidth: true
+          Layout.fillHeight: true
 
-        Loader {
-          anchors.fill: parent
-          sourceComponent: viewMode === "grid" ? gridViewComponent : listViewComponent
-        }
+          Loader {
+            anchors.fill: parent
+            sourceComponent: viewMode === "grid" ? gridViewComponent : listViewComponent
+          }
+        } // [END FILE EXPLORER]
+
+        // [PATH BAR]
+        Rectangle {
+          Layout.fillWidth: true
+          Layout.preferredHeight: 36
+          color: "#181818"
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 12
+            text: AppBackend ? AppBackend.current_filesystem_path : ""
+            color: "#777"
+            font.family: "Monospace"
+          }
+        } // [END PATH BAR] 
       }
     }
 

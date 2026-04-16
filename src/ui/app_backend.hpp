@@ -76,6 +76,13 @@ class AppBackend : public QObject {
 
 
     /**
+     * @brief Removes a file from the merg elist
+     * @param path: Path to remove from "merge_list"
+     */
+    Q_INVOKABLE void removeFileFromMerge(const QString &filename);
+
+
+    /**
      * @brief Joins the current path with a folder name and navigates into it
      */
     Q_INVOKABLE void enterSubdirectory(const QString &directory_name);

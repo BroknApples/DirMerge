@@ -63,8 +63,16 @@ Q_INVOKABLE void AppBackend::merge() {
 
 Q_INVOKABLE void AppBackend::addFileToMerge(const QString &filename) {
   std::string current = _current_filesystem_path.toStdString();
-  std::string fullPath = (fs::path(current)/filename.toStdString()).string();
-  _active_merge_config.addFileToMergeList(fullPath);
+  std::string full_path = (fs::path(current)/filename.toStdString()).string();
+  _active_merge_config.addFileToMergeList(full_path);
+  emit mergeListChanged();
+}
+
+
+Q_INVOKABLE void AppBackend::removeFileFromMerge(const QString &filename) {
+  std::string current = _current_filesystem_path.toStdString();
+  std::string full_path = (fs::path(current)/filename.toStdString()).string();
+  _active_merge_config.removeFileFromMergeList(full_path);
   emit mergeListChanged();
 }
 
